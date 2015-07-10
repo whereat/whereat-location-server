@@ -1,8 +1,9 @@
-import NativePackagerKeys._
+import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 
-packageArchetype.java_application
+enablePlugins(JavaAppPackaging)
 
 name := "whereat-server"
+
 
 version := "1.0"
 

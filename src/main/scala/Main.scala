@@ -24,16 +24,8 @@ object Main extends App with Config {
       }
     }
 
-//  val bindingFuture = Http().bindAndHandle(route, "localhost", httpPort)
+  Http().bindAndHandle(route, httpInterface, httpPort)
 
-  Http().bindAndHandle(route, "localhost", httpPort)
-
-  println(s"Server online at http://localhost:$httpPort/\nPress RETURN to stop...")
-//  io.StdIn.readLine()
-//
-//  bindingFuture
-//    .flatMap(_.unbind())
-//    .flatMap(_.unbind())
-//    .onComplete(_ ⇒ system.shutdown())
+  println(s"Server online at http://localhost:$httpPort")
 
 }

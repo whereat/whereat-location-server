@@ -12,7 +12,7 @@ import akka.stream.ActorMaterializer
 object Main extends App {
 
   import system.dispatcher
-  implicit val system = ActorSystem("whereat-system")
+  implicit val system = ActorSystem("whereat-server")
   implicit val materializer = ActorMaterializer()
 
   val route =

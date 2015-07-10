@@ -9,7 +9,7 @@ import akka.stream.ActorMaterializer
  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
  */
 
-object Main extends App {
+object Main extends App with Config {
 
   import system.dispatcher
   implicit val system = ActorSystem("whereat-server")
@@ -24,13 +24,16 @@ object Main extends App {
       }
     }
 
-  val bindingFuture = Http().bindAndHandle(route, "localhost", 5000)
+//  val bindingFuture = Http().bindAndHandle(route, "localhost", httpPort)
 
-  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  io.StdIn.readLine()
+  Http().bindAndHandle(route, "localhost", httpPort)
 
-  bindingFuture
-    .flatMap(_.unbind())
-    .onComplete(_ ⇒ system.shutdown())
+  println(s"Server online at http://localhost:$httpPort/\nPress RETURN to stop...")
+//  io.StdIn.readLine()
+//
+//  bindingFuture
+//    .flatMap(_.unbind())
+//    .flatMap(_.unbind())
+//    .onComplete(_ ⇒ system.shutdown())
 
 }

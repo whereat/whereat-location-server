@@ -1,10 +1,8 @@
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
+package routes
+
 import akka.http.scaladsl.server.Directives._
-import akka.stream.ActorMaterializer
 import model.Location
 import model.LocationJsonProtocol._
-import util.Config
 
 /**
  * Author: @aguestuser
@@ -12,11 +10,7 @@ import util.Config
  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
  */
 
-object Main extends App with Config {
-
-  import system.dispatcher
-  implicit val system = ActorSystem("whereat-server")
-  implicit val materializer = ActorMaterializer()
+trait Routes {
 
   def echo (loc: Location)(completer: Location ⇒ Unit) = completer(loc)
 
@@ -24,7 +18,8 @@ object Main extends App with Config {
     path("hello") {
       get {
         complete {
-          "hello world!" }
+          "hello world!"
+        }
       }
     } ~
     path("locations") {
@@ -36,9 +31,4 @@ object Main extends App with Config {
         }
       }
     }
-
-  Http().bindAndHandle(route, httpInterface, httpPort)
-
-  println(s"Server online at http://localhost:$httpPort")
-
 }

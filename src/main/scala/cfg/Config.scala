@@ -1,7 +1,6 @@
 package cfg
 
 import com.typesafe.config.ConfigFactory
-
 import scala.util.Properties
 
 /**

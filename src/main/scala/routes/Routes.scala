@@ -4,8 +4,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
 import model.{Location, JsonProtocols}
-
 import scala.concurrent.ExecutionContextExecutor
+
+/**
+ * Author: @aguestuser
+ * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
+ */
 
 trait Routes extends JsonProtocols {
 

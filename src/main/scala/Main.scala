@@ -6,16 +6,11 @@ import cfg.Config
 
 /**
  * Author: @aguestuser
- * Date: 7/10/15
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
 
 object Main extends App with Config with Routes {
-
-//  import system.dispatcher
-//  implicit val system = ActorSystem("whereat-server")
-//  implicit val materializer = ActorMaterializer()
 
   override implicit val system = ActorSystem()
   override implicit val executor = system.dispatcher

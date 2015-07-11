@@ -7,7 +7,6 @@ import support.SampleData
 
 /**
  * Author: @aguestuser
- * Date: 7/10/15
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 

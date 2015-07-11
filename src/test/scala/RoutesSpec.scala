@@ -11,7 +11,7 @@ import support.SampleData
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-class MainSpec extends WordSpec with Matchers with ScalatestRouteTest with Routes {
+class RoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with Routes {
 
   lazy val s17 = SampleData.s17
   lazy val s17Json = SampleData.s17Json

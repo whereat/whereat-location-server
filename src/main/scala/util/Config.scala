@@ -6,8 +6,7 @@ import scala.util.Properties
 
 /**
   * Author: @aguestuser
-  * Date: 7/10/15
-  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
+  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
   */
 
 trait Config {

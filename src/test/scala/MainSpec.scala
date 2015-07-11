@@ -1,3 +1,4 @@
+import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.{Matchers, WordSpec}
@@ -7,7 +8,7 @@ import support.SampleData
 /**
  * Author: @aguestuser
  * Date: 7/10/15
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
+ * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
 class MainSpec extends WordSpec with Matchers with ScalatestRouteTest with Routes {
@@ -27,8 +28,7 @@ class MainSpec extends WordSpec with Matchers with ScalatestRouteTest with Route
 
     "respond to a properly formated POST/locations with echo" in {
 
-      Post("/locations", HttpEntity(`application/json`, s17Json)) ~>
-        route ~> check {
+      Post("/locations", HttpEntity(`application/json`, s17Json)) ~> route ~> check {
         responseAs[String] shouldEqual s17Json
       }
 

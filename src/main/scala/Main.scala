@@ -1,41 +1,25 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import model.Location
-import model.LocationJsonProtocol._
+import routes.Routes
 import util.Config
 
 /**
  * Author: @aguestuser
  * Date: 7/10/15
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
+ * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-object Main extends App with Config {
 
-  import system.dispatcher
-  implicit val system = ActorSystem("whereat-server")
-  implicit val materializer = ActorMaterializer()
+object Main extends App with Config with Routes {
 
-  def echo (loc: Location)(completer: Location ⇒ Unit) = completer(loc)
+//  import system.dispatcher
+//  implicit val system = ActorSystem("whereat-server")
+//  implicit val materializer = ActorMaterializer()
 
-  val route =
-    path("hello") {
-      get {
-        complete {
-          "hello world!" }
-      }
-    } ~
-    path("locations") {
-      post {
-        entity(as[Location]) { loc ⇒
-          completeWith(instanceOf[Location]) {
-            completer ⇒ echo(loc)(completer)
-          }
-        }
-      }
-    }
+  override implicit val system = ActorSystem()
+  override implicit val executor = system.dispatcher
+  override implicit val materializer = ActorMaterializer()
 
   Http().bindAndHandle(route, httpInterface, httpPort)
 

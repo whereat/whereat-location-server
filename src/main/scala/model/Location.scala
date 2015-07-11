@@ -7,12 +7,13 @@ import spray.json.DefaultJsonProtocol
 /**
  * Author: @aguestuser
  * Date: 7/10/15
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
+ * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
 
 case class Location(id: String, lat: Double, lon: Double, time: Long)
+object Location
 
-object LocationJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val locationFormat = jsonFormat4(Location)
+trait LocationJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
+  implicit val locationFormat = jsonFormat4(Location.apply)
 }

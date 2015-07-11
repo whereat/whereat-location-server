@@ -1,16 +1,17 @@
 package routes
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
-import model.Location
-import model.LocationJsonProtocol._
+import akka.stream.Materializer
+import model.{Location, JsonProtocols}
 
-/**
- * Author: @aguestuser
- * Date: 7/10/15
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
- */
+import scala.concurrent.ExecutionContextExecutor
 
-trait Routes {
+trait Routes extends JsonProtocols {
+
+  implicit val system: ActorSystem
+  implicit def executor: ExecutionContextExecutor
+  implicit val materializer: Materializer
 
   def echo (loc: Location)(completer: Location ⇒ Unit) = completer(loc)
 
@@ -18,17 +19,17 @@ trait Routes {
     path("hello") {
       get {
         complete {
-          "hello world!"
-        }
+          "hello world!" }
       }
     } ~
-    path("locations") {
-      post {
-        entity(as[Location]) { loc ⇒
-          completeWith(instanceOf[Location]) {
-            completer ⇒ echo(loc)(completer)
+      path("locations") {
+        post {
+          entity(as[Location]) { loc ⇒
+            completeWith(instanceOf[Location]) {
+              completer ⇒ echo(loc)(completer)
+            }
           }
         }
       }
-    }
+
 }

@@ -13,15 +13,19 @@ import support.SampleData.s17
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-class LocationsSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures {
+class LocationsSpec extends WordSpec
+  with Matchers
+  with BeforeAndAfter
+  with ScalaFutures
+  with LocationQueries {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
 
-  val locations = TableQuery[Locations]
+  //val locations = TableQuery[Locations]
   var db: Database = _
 
-  def createSchema() = db.run(locations.schema.create).futureValue
-  def insertLocation() = db.run(locations += s17).futureValue
+  //def createSchema() = db.run(locations.schema.create).futureValue
+  //def insertLocation() = db.run(locations += s17).futureValue
 
   before { db = Database.forConfig("testDb") }
   after { db.close() }
@@ -29,7 +33,9 @@ class LocationsSpec extends WordSpec with Matchers with BeforeAndAfter with Scal
   "The Locations Table" should {
 
     "create a schema" in {
-      createSchema()
+//      createSchema()
+      db.run(createSchema).futureValue
+
       val tables = db.run(MTable.getTables).futureValue
 
       tables.size shouldEqual 1
@@ -37,17 +43,20 @@ class LocationsSpec extends WordSpec with Matchers with BeforeAndAfter with Scal
     }
 
     "insert a location" in {
-      createSchema()
-      val insertCount = insertLocation()
+//      createSchema()
+//      val insertCount = insertLocation()
+
+      db.run(createSchema).futureValue
+      val insertCount = db.run(insert(s17)).futureValue
 
       insertCount shouldEqual 1
     }
 
     "retrieve a location" in {
 
-      createSchema()
-      insertLocation()
-      val locs = db.run(locations.result).futureValue
+      db.run(createSchema).futureValue
+      db.run(insert(s17)).futureValue
+      val locs = db.run(getAll).futureValue
 
       locs.size shouldEqual 1
       locs.head shouldEqual s17

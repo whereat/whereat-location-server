@@ -21,7 +21,10 @@ class Locations(tag: Tag) extends Table[Location](tag, "LOCATIONS") {
   def idx = index("idx_time", time, unique = false)
 }
 
-//object locations extends TableQuery(new Locations(_)) {
-//  def since(t: Long) = this.filter(_.time > t)
-//  //val since_ = Compiled(since _)
-//}
+trait LocationQueries {
+  val locations = TableQuery[Locations]
+  val createSchema = locations.schema.create
+
+  val insert = { l: Location => locations += l }
+  val getAll = locations.result
+}

@@ -1,8 +1,9 @@
+package routes
+
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.{Matchers, WordSpec}
-import routes.Routes
 import support.SampleData
 
 /**

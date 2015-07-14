@@ -26,5 +26,5 @@ trait LocationQueries {
   val createSchema = locations.schema.create
 
   val insert = { l: Location => locations += l }
-  val getAll = locations.result
+  val allSince = { t: Long => locations.filter(_.time > t) }
 }

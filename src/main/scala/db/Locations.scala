@@ -4,6 +4,9 @@ import model.Location
 import slick.lifted.{Tag, ProvenShape}
 import slick.driver.H2Driver.api._
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.global
+
 
 /**
  * Author: @aguestuser
@@ -28,8 +31,27 @@ trait LocationQueries {
   val insert = { l: Location ⇒ locations += l }
   val insertMany = { ls: Seq[Location] ⇒ locations ++= ls }
 
-  val get = { id: String ⇒ locations.filter(_.id === id) }
+  val fetch = { id: String ⇒ locations.filter(_.id === id) }
   val allSince = { t: Long ⇒ locations.filter(_.time > t) }
 
   val clear = locations.delete
 }
+
+trait LocationDao extends LocationQueries {
+
+  implicit val ec = scala.concurrent.ExecutionContext.global
+  val db = Database.forConfig("devDb")
+
+  def writeAndReport(loc: Location): Future[Seq[Location]] =
+    db.run {
+      for {
+        _ ← createSchema
+        l ← insert(loc)
+        ls ← allSince(loc.time).result
+      } yield ls
+    }
+
+  //TODO figure out error-handling here (Option[Seq[Location]] didn't work)
+}
+
+object LocationDao extends LocationDao

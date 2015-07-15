@@ -17,3 +17,10 @@ object Location
 trait LocationJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val locationFormat = jsonFormat4(Location.apply)
 }
+
+//case class LocationSeq(locations: Seq[Location])
+//object LocationSeq
+//
+//trait LocationSeqJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
+//  implicit val locationSeqFormat = jsonFormat1(LocationSeq.apply)
+//}

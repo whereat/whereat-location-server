@@ -2,9 +2,11 @@ package routes
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import db.{LocationDao}
 import model.{Location, JsonProtocols}
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor}
 
 /**
  * Author: @aguestuser
@@ -17,20 +19,19 @@ trait Routes extends JsonProtocols {
   implicit def executor: ExecutionContextExecutor
   implicit val materializer: Materializer
 
-  def echo (loc: Location)(completer: Location ⇒ Unit) = completer(loc)
-
-  val route =
+  def route[T <: LocationDao](dao: T): Route =
     path("hello") {
       get {
         complete {
-          "hello world!" }
+          "hello world!"
+        }
       }
     } ~
       path("locations") {
         post {
           entity(as[Location]) { loc ⇒
-            completeWith(instanceOf[Location]) {
-              completer ⇒ echo(loc)(completer)
+            completeWith(instanceOf[Seq[Location]]) {
+              completer ⇒ dao.writeAndReport(loc) map completer
             }
           }
         }

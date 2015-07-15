@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import routes.Routes
+import db.LocationDao
 import cfg.Config
 
 /**
@@ -16,7 +17,7 @@ object Main extends App with Config with Routes {
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
-  Http().bindAndHandle(route, httpInterface, httpPort)
+  Http().bindAndHandle(route(LocationDao), httpInterface, httpPort)
 
   println(s"Server online at http://localhost:$httpPort")
 

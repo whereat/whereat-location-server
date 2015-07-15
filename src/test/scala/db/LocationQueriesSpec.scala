@@ -89,7 +89,7 @@ class LocationQueriesSpec
         for {
           _ ← createSchema
           _ ← insert(s17)
-          l ← get(s17.id).result.head
+          l ← fetch(s17.id).result.head
         } yield l
       }.futureValue
 

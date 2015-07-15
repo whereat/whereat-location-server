@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import db.{LocationDao}
-import model.{Location, JsonProtocols}
+import model.{WrappedLocation, Location, JsonProtocols}
 import scala.concurrent.{ExecutionContextExecutor}
 
 /**
@@ -27,14 +27,24 @@ trait Routes extends JsonProtocols {
         }
       }
     } ~
-      path("locations") {
+      pathPrefix("locations") {
+        path("init") {
         post {
           entity(as[Location]) { loc ⇒
             completeWith(instanceOf[Seq[Location]]) {
-              completer ⇒ dao.writeAndReport(loc) map completer
+              completer ⇒ dao.recordInit(loc) map completer
             }
           }
         }
+        } ~
+          path("refresh") {
+            post {
+              entity(as[WrappedLocation]) { case WrappedLocation(loc, lastPing) ⇒
+                completeWith(instanceOf[Seq[Location]]) {
+                  completer ⇒ dao.recordRefresh(loc, lastPing) map completer
+                }
+              }
+            }
       }
-
+      }
 }

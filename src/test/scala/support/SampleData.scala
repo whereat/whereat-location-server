@@ -1,6 +1,6 @@
 package support
 
-import model.{LocationJsonProtocol, Location}
+import model.{JsonProtocols, WrappedLocation, LocationJsonProtocol, Location}
 import spray.json._
 
 /**
@@ -8,7 +8,7 @@ import spray.json._
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-object SampleData extends LocationJsonProtocol {
+object SampleData extends JsonProtocols {
 
   val s17 = Location(
     id = "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
@@ -17,8 +17,57 @@ object SampleData extends LocationJsonProtocol {
     time = 1505606400000L
   )
 
-  val s17Json = s17.toJson.prettyPrint
-  val s17JsonLiteral = """{"id":"75782cd4-1a42-4af1-9130-05c63b2aa9ff","lat": 40.7092529,"lon": -74.0112551,"time": 1505606400000 }"""
+  val s17Json =
+    """{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lat": 40.7092529,
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}""".stripMargin
+
+  val s17Json_missingField =
+    """{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lat": 40.7092529,
+      |  "lon": -74.0112551
+      |}""".stripMargin
+
+  val s17Json_wrongOrder =
+    """{
+      |  "lat": 40.7092529,
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}""".stripMargin
+
+  val s17Json_typeError =
+    """{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lat": "40.7092529",
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}""".stripMargin
+
+  val s17Json_badJson =
+    """{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  lat: "40.7092529",
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}""".stripMargin
+
+  val s17JsonCompact = """{"id":"75782cd4-1a42-4af1-9130-05c63b2aa9ff","lat": 40.7092529,"lon": -74.0112551,"time": 1505606400000 }"""
+
+  val wrappedS17Json =
+    """{
+      |  "location": {
+      |    "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |    "lat": 40.7092529,
+      |    "lon": -74.0112551,
+      |    "time": 1505606400000
+      |  },
+      |  "lastPing": 1505606400000
+      |}""".stripMargin
 
   val n17 = Location(
     id = "8d3f4369-e829-4ca5-8d9b-123264aeb469",
@@ -27,7 +76,34 @@ object SampleData extends LocationJsonProtocol {
     time = 1510876800000L
   )
 
-  val n17Json = n17.toJson.compactPrint
-  val n17JsonLiteral = """{"id":"8d3f4369-e829-4ca5-8d9b-123264aeb469","lat":40.706877,"lon":-74.0112654,"time":1510876800000}"""
+  val n17Json =
+    """{
+      |  "id":"8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |  "lat":40.706877,"lon":-74.0112654,
+      |  "time":1510876800000
+      |}""".stripMargin
+
+  val n17JsonCompact = """{"id":"8d3f4369-e829-4ca5-8d9b-123264aeb469","lat":40.706877,"lon":-74.0112654,"time":1510876800000}"""
+
+  val s17n17JsonSeq =
+    """[{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lat": 40.7092529,
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}, {
+      |  "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |  "lat": 40.706877,
+      |  "lon": -74.0112654,
+      |  "time": 1510876800000
+      |}]""".stripMargin
+
+  val n17JsonSeq =
+    """[{
+      |  "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |  "lat": 40.706877,
+      |  "lon": -74.0112654,
+      |  "time": 1510876800000
+      |}]""".stripMargin
 
 }

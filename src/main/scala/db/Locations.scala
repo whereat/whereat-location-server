@@ -42,12 +42,21 @@ trait LocationDao extends LocationQueries {
   implicit val ec = scala.concurrent.ExecutionContext.global
   val db = Database.forConfig("devDb")
 
-  def writeAndReport(loc: Location): Future[Seq[Location]] =
+  def recordInit(loc: Location): Future[Seq[Location]] =
     db.run {
       for {
         _ ← createSchema
         l ← insert(loc)
-        ls ← allSince(loc.time).result
+        ls ← locations.result
+      } yield ls
+    }
+
+  def recordRefresh(loc: Location, lastPing: Long): Future[Seq[Location]] =
+    db.run {
+      for {
+        _ ← createSchema
+        l ← insert(loc)
+        ls ← allSince(lastPing).result
       } yield ls
     }
 

@@ -2,11 +2,12 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection, Route}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
 import model.Location
 import org.scalatest.{Matchers, WordSpec}
-import support.SampleData.{s17, s17Json, n17}
+import support.SampleData._
 
 import scala.concurrent.Future
 
@@ -18,9 +19,11 @@ import scala.concurrent.Future
 class RoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with Routes {
 
   object FakeLocationDao extends LocationDao {
-    override def writeAndReport(loc: Location) = {
+    override def recordInit(loc: Location) =
       Future.successful(Seq(s17, n17))
-    }
+
+    override def recordRefresh(loc: Location, lastPing: Long) =
+      Future.successful(Seq(n17))
   }
 
   val rte = route[LocationDao](FakeLocationDao)
@@ -35,23 +38,62 @@ class RoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with Rou
 
     }
 
-    "respond to a properly formated POST/locations with echo" in {
+    "respond to valid POST/locations/init requests with all locations in DB" in {
 
-      Post("/locations", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
-        responseAs[String] shouldEqual
-          """[{
-            |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
-            |  "lat": 40.7092529,
-            |  "lon": -74.0112551,
-            |  "time": 1505606400000
-            |}, {
-            |  "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
-            |  "lat": 40.706877,
-            |  "lon": -74.0112654,
-            |  "time": 1510876800000
-            |}]""".stripMargin
+      Post("/locations/init", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
+        responseAs[String] shouldEqual s17n17JsonSeq
       }
 
+    }
+
+    "respond to POST/locations/init requests with incorrectly ordered fields" in {
+
+      Post("/locations/init", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
+        responseAs[String] shouldEqual s17n17JsonSeq
+      }
+
+    }
+
+    "reject POST/locations/init requests with missing fields" in {
+
+      Post("/locations/init", HttpEntity(`application/json`, s17Json_missingField)) ~> rte ~> check {
+
+        rejection shouldBe a[MalformedRequestContentRejection]
+        rejection match {
+          case MalformedRequestContentRejection(msg, _) ⇒
+            msg shouldEqual "Object is missing required member 'time'"
+        }
+      }
+    }
+
+    "reject POST/locations/init requests with type errors" in {
+
+      Post("/locations/init", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
+
+        rejection shouldBe a[MalformedRequestContentRejection]
+        rejection match {
+          case MalformedRequestContentRejection(msg, _) ⇒
+            msg shouldEqual """Expected Double as JsNumber, but got "40.7092529""""
+        }
+      }
+    }
+
+    "reject POST/locations/init requests with incorrectly formatted JSON" in {
+
+      Post("/locations/init", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
+
+        rejection shouldBe a[MalformedRequestContentRejection]
+        rejection match {
+          case MalformedRequestContentRejection(msg, _) ⇒
+            msg should include("Unexpected character")
+        }
+      }
+    }
+
+    "respond to valid POST/locations/refresh requests with all locations since last ping" in {
+      Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json)) ~> rte ~> check {
+        responseAs[String] shouldEqual n17JsonSeq
+      }
     }
 
   }

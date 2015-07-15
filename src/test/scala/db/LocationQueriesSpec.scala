@@ -37,8 +37,8 @@ class LocationQueriesSpec
 
       val tables = db.run {
         for {
-          _ <- createSchema
-          ts <- MTable.getTables
+          _ ← createSchema
+          ts ← MTable.getTables
         } yield ts
       }.futureValue
 
@@ -50,49 +50,59 @@ class LocationQueriesSpec
 
       val insertCount = db.run {
         for {
-          _ <- createSchema
-          ic <- insert(s17)
+          _ ← createSchema
+          ic ← insert(s17)
         } yield ic
-      }
+      }.futureValue
 
-      insertCount.futureValue shouldEqual 1
+      insertCount shouldEqual 1
     }
 
-    "retrieve a location" in {
+    "insert many locations" in {
 
-      val locs = db.run {
+      val insertCount = db.run {
         for {
-          _ <- createSchema
-          _ <- insert(s17)
-          ls <- locations.result
-        } yield ls
-      }
+          _ ← createSchema
+          ic ← insertMany(Seq(s17, n17))
+        } yield ic
+      }.futureValue
 
-      locs.futureValue shouldEqual Seq(s17)
+      insertCount shouldEqual Some(2)
     }
 
     "retrieve all locations" in {
 
       val locs = db.run {
         for {
-          _ <- createSchema
-          _ <- insert(s17)
-          _ <- insert(n17)
-          ls <- locations.result
+          _ ← createSchema
+          _ ← insertMany(Seq(s17, n17))
+          ls ← locations.result
         } yield ls
-      }
+      }.futureValue
 
-      locs.futureValue shouldEqual Seq(s17, n17)
+      locs shouldEqual Seq(s17, n17)
+    }
+
+    "retrieve one location" in {
+
+      val loc = db.run {
+        for {
+          _ ← createSchema
+          _ ← insert(s17)
+          l ← get(s17.id).result.head
+        } yield l
+      }.futureValue
+
+      loc shouldEqual s17
     }
 
     "retrieve all locations since a given time" in {
 
       val locs = db.run {
         for {
-          _ <- createSchema
-          _ <- insert(s17)
-          _ <- insert(n17)
-          ls <- allSince(s17.time).result
+          _ ← createSchema
+          _ ← insertMany(Seq(s17, n17))
+          ls ← allSince(s17.time).result
         } yield ls
       }.futureValue
 
@@ -101,7 +111,20 @@ class LocationQueriesSpec
 
     }
 
-  }
+    "delete all locations" in {
 
+      val rowCount = db.run {
+        for {
+          _ ← createSchema
+          _ ← insertMany(Seq(s17, n17))
+          _ ← clear
+          n ← locations.size.result
+        } yield n
+      }.futureValue
+
+      rowCount shouldEqual 0
+    }
+
+  }
 
 }

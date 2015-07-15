@@ -25,6 +25,11 @@ trait LocationQueries {
   val locations = TableQuery[Locations]
   val createSchema = locations.schema.create
 
-  val insert = { l: Location => locations += l }
-  val allSince = { t: Long => locations.filter(_.time > t) }
+  val insert = { l: Location ⇒ locations += l }
+  val insertMany = { ls: Seq[Location] ⇒ locations ++= ls }
+
+  val get = { id: String ⇒ locations.filter(_.id === id) }
+  val allSince = { t: Long ⇒ locations.filter(_.time > t) }
+
+  val clear = locations.delete
 }

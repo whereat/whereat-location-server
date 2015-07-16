@@ -17,6 +17,13 @@ object SampleData extends JsonProtocols {
     time = 1505606400000L
   )
 
+  val s17_ = Location(
+    id = s17.id,
+    lat = 40.7092530,
+    lon = -74.0112552,
+    time = 1505606400001L
+  )
+
   val s17Json =
     """{
       |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",

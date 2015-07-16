@@ -5,7 +5,7 @@ import org.scalatest.{Matchers, WordSpec, BeforeAndAfter, FunSuite}
 import org.scalatest.concurrent.ScalaFutures
 import slick.driver.H2Driver.api._
 import slick.jdbc.meta._
-import support.SampleData.{s17, n17}
+import support.SampleData.{s17, n17, s17_}
 
 /**
  * Author: @aguestuser
@@ -109,6 +109,35 @@ class LocationQueriesSpec
       db.run(locations.size.result).futureValue shouldEqual 2
       locs shouldEqual Seq(n17)
 
+    }
+
+    "update a location" in {
+
+      val updateCount = db.run {
+        for {
+          _ ← createSchema
+          _ ← insert(s17)
+          n ← update(s17.id, s17_)
+        } yield n
+      }.futureValue
+
+      updateCount shouldEqual 1
+      db.run(fetch(s17.id).result.head).futureValue shouldEqual s17_
+
+    }
+
+    "delete a location" in {
+
+      val rowCount = db.run {
+        for {
+          _ ← createSchema
+          _ ← insertMany(Seq(s17, n17))
+          _ ← delete(s17.id)
+          n ← locations.size.result
+        } yield n
+      }.futureValue
+
+      rowCount shouldEqual 1
     }
 
     "delete all locations" in {

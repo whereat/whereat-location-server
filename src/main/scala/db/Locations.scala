@@ -1,12 +1,8 @@
 package db
 
 import model.Location
-import slick.lifted.{Tag, ProvenShape}
+import slick.lifted.Tag
 import slick.driver.H2Driver.api._
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.global
-
 
 /**
  * Author: @aguestuser
@@ -24,43 +20,7 @@ class Locations(tag: Tag) extends Table[Location](tag, "LOCATIONS") {
   def idx = index("idx_time", time, unique = false)
 }
 
-trait LocationQueries {
-  val locations = TableQuery[Locations]
-  val createSchema = locations.schema.create
 
-  val insert = { l: Location ⇒ locations += l }
-  val insertMany = { ls: Seq[Location] ⇒ locations ++= ls }
 
-  val fetch = { id: String ⇒ locations.filter(_.id === id) }
-  val allSince = { t: Long ⇒ locations.filter(_.time > t) }
 
-  val clear = locations.delete
-}
 
-trait LocationDao extends LocationQueries {
-
-  implicit val ec = scala.concurrent.ExecutionContext.global
-  val db = Database.forConfig("devDb")
-
-  def recordInit(loc: Location): Future[Seq[Location]] =
-    db.run {
-      for {
-        _ ← createSchema
-        l ← insert(loc)
-        ls ← locations.result
-      } yield ls
-    }
-
-  def recordRefresh(loc: Location, lastPing: Long): Future[Seq[Location]] =
-    db.run {
-      for {
-        _ ← createSchema
-        l ← insert(loc)
-        ls ← allSince(lastPing).result
-      } yield ls
-    }
-
-  //TODO figure out error-handling here (Option[Seq[Location]] didn't work)
-}
-
-object LocationDao extends LocationDao

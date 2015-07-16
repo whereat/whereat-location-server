@@ -2,6 +2,8 @@ package cfg
 
 import com.typesafe.config.ConfigFactory
 import scala.util.Properties
+import slick.driver.H2Driver.api._
+
 
 /**
   * Author: @aguestuser
@@ -9,9 +11,10 @@ import scala.util.Properties
   */
 
 trait Config {
-   private val config = ConfigFactory.load()
-   private val httpConfig = config.getConfig("http")
+  private val config = ConfigFactory.load()
+  private val httpConfig = config.getConfig("http")
 
-   val httpInterface = httpConfig.getString("interface")
-   val httpPort = Properties.envOrElse("PORT", httpConfig.getString("port")).toInt
+  val httpInterface = httpConfig.getString("interface")
+  val httpPort = Properties.envOrElse("PORT", httpConfig.getString("port")).toInt
+  val db = Database.forConfig("devDb")
  }

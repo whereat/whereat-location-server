@@ -2,7 +2,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import routes.Routes
-import db.LocationDao
+import db.{LocationQueries, LocationDao}
 import cfg.Config
 
 /**
@@ -11,14 +11,15 @@ import cfg.Config
  */
 
 
-object Main extends App with Config with Routes {
+object Main extends App with Config with Routes with LocationQueries {
 
   override implicit val system = ActorSystem()
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
-  Http().bindAndHandle(route(LocationDao), httpInterface, httpPort)
-
-  println(s"Server online at http://localhost:$httpPort")
-
+  db.run(createSchema).map { _ ⇒
+    println("Database initialized")
+    Http().bindAndHandle(route(LocationDao), httpInterface, httpPort)
+    println(s"Server online at http://localhost:$httpPort")
+  }
 }

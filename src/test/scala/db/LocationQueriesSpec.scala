@@ -1,11 +1,11 @@
 package db
 
-import org.scalatest.time.{Span, Seconds}
-import org.scalatest.{Matchers, WordSpec, BeforeAndAfter, FunSuite}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Seconds, Span}
+import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 import slick.driver.H2Driver.api._
 import slick.jdbc.meta._
-import support.SampleData.{s17, n17, s17_}
+import support.SampleData.{n17, s17, s17_}
 
 /**
  * Author: @aguestuser
@@ -25,10 +25,12 @@ class LocationQueriesSpec
   var db: Database = _
 
   before {
-    db = Database.forConfig("testDb")
+    db = Database.forConfig("testDb1")
+    db.run(createSchema).futureValue
   }
   after {
-    db.close()
+    db.run(dropSchema).futureValue
+    db.shutdown.futureValue
   }
 
   "The Locations SQL Interface" should {
@@ -37,7 +39,6 @@ class LocationQueriesSpec
 
       val tables = db.run {
         for {
-          _ ← createSchema
           ts ← MTable.getTables
         } yield ts
       }.futureValue
@@ -46,11 +47,25 @@ class LocationQueriesSpec
       tables.count(_.name.name == "LOCATIONS") shouldEqual 1
     }
 
+    "drop a schema" in {
+
+      val tables = db.run {
+        for {
+          _ ← dropSchema
+          ts ← MTable.getTables
+        } yield ts
+      }.futureValue
+
+      tables.size shouldEqual 0
+      tables.count(_.name.name == "LOCATIONS") shouldEqual 0
+
+      db.run(createSchema).futureValue // to accomodate teardown
+    }
+
     "insert a location" in {
 
       val insertCount = db.run {
         for {
-          _ ← createSchema
           ic ← insert(s17)
         } yield ic
       }.futureValue
@@ -62,7 +77,6 @@ class LocationQueriesSpec
 
       val insertCount = db.run {
         for {
-          _ ← createSchema
           ic ← insertMany(Seq(s17, n17))
         } yield ic
       }.futureValue
@@ -74,7 +88,6 @@ class LocationQueriesSpec
 
       val locs = db.run {
         for {
-          _ ← createSchema
           _ ← insertMany(Seq(s17, n17))
           ls ← locations.result
         } yield ls
@@ -87,7 +100,6 @@ class LocationQueriesSpec
 
       val loc = db.run {
         for {
-          _ ← createSchema
           _ ← insert(s17)
           l ← fetch(s17.id).result.head
         } yield l
@@ -100,7 +112,6 @@ class LocationQueriesSpec
 
       val locs = db.run {
         for {
-          _ ← createSchema
           _ ← insertMany(Seq(s17, n17))
           ls ← allSince(s17.time).result
         } yield ls
@@ -115,7 +126,6 @@ class LocationQueriesSpec
 
       val updateCount = db.run {
         for {
-          _ ← createSchema
           _ ← insert(s17)
           n ← update(s17.id, s17_)
         } yield n
@@ -130,7 +140,6 @@ class LocationQueriesSpec
 
       val rowCount = db.run {
         for {
-          _ ← createSchema
           _ ← insertMany(Seq(s17, n17))
           _ ← delete(s17.id)
           n ← locations.size.result
@@ -144,7 +153,6 @@ class LocationQueriesSpec
 
       val rowCount = db.run {
         for {
-          _ ← createSchema
           _ ← insertMany(Seq(s17, n17))
           _ ← clear
           n ← locations.size.result

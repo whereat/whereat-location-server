@@ -23,7 +23,7 @@ with ScalaFutures {
   var dao: LocationDaoImpl = _
 
   before {
-    dao = LocationDaoImpl(Database.forConfig("testDb"))
+    dao = LocationDaoImpl(Database.forConfig("testDb2"))
     dao.db.run {
       for {
         _ ← createSchema
@@ -33,6 +33,7 @@ with ScalaFutures {
   }
 
   after {
+    dao.db.run(dropSchema).futureValue
     dao.db.close()
   }
 

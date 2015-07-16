@@ -11,7 +11,9 @@ import slick.driver.H2Driver.api._
 
 trait LocationQueries {
   val locations = TableQuery[Locations]
+
   val createSchema = locations.schema.create
+  val dropSchema = locations.schema.drop
 
   val insert = { l: Location ⇒ locations += l }
   val insertMany = { ls: Seq[Location] ⇒ locations ++= ls }

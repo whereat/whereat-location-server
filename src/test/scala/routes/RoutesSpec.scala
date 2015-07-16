@@ -29,7 +29,7 @@ with BeforeAndAfterEach {
   val fakeDao = mock[LocationDao]
   val rte = route(fakeDao)
 
-  "The service" should {
+  "The API service" should {
 
     "respond to GET/hello with 'hello world!'" in {
 

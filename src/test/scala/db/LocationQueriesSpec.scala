@@ -31,7 +31,7 @@ class LocationQueriesSpec
     db.close()
   }
 
-  "The Locations Table" should {
+  "The Locations SQL Interface" should {
 
     "create a schema" in {
 

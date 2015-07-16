@@ -15,41 +15,43 @@ import scala.concurrent.ExecutionContext.global
 class LocationDaoSpec extends WordSpec
 with LocationQueries
 with Matchers
-with BeforeAndAfterAll
-with BeforeAndAfterEach
+with BeforeAndAfter
 with ScalaFutures {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
-  implicit val ec = scala.concurrent.ExecutionContext.global
+  implicit val ec_ = scala.concurrent.ExecutionContext.global
 
-  object fakeLocationDao extends LocationDao {
-    val db = Database.forConfig("testDb")
+  var dao: LocationDaoImpl = _
+
+  before {
+    dao = LocationDaoImpl(Database.forConfig("testDb"))
+    dao.db.run {
+      for {
+        _ ← createSchema
+        _ ← insert(s17)
+      } yield {}
+    }.futureValue
   }
 
-  override def beforeAll() = fakeLocationDao.db.run(createSchema).futureValue
+  after {
+    dao.db.close()
+  }
 
-  override def afterAll() = fakeLocationDao.db.close()
-
-  override def beforeEach() = fakeLocationDao.db.run(insert(s17)).futureValue
-
-  override def afterEach() = fakeLocationDao.db.run(delete(s17.id)).futureValue
-
-  "LocationDao" when {
+  "The Location DAO" when {
 
     "handling an initial ping" should {
 
       "record the location and return all locations in the DB" in {
-        fakeLocationDao.recordInit(n17).futureValue shouldEqual Seq(s17, n17)
+        dao.recordInit(n17).futureValue shouldEqual Seq(s17, n17)
       }
     }
 
     "handling a refresh ping" should {
 
       "record the location and return all locations since last ping" in {
-        fakeLocationDao.recordRefresh(n17, s17.time).futureValue shouldEqual Seq(n17)
+        dao.db.run(insert(n17)).futureValue
+        dao.recordRefresh(n17, s17.time).futureValue shouldEqual Seq(n17)
       }
-
     }
   }
-
 }

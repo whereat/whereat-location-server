@@ -36,15 +36,15 @@ trait Routes extends JsonProtocols {
             }
           }
         }
-        } ~
-          path("refresh") {
-            post {
-              entity(as[WrappedLocation]) { case WrappedLocation(loc, lastPing) ⇒
-                completeWith(instanceOf[Seq[Location]]) {
-                  completer ⇒ dao.recordRefresh(loc, lastPing) map completer
-                }
+      } ~
+        path("refresh") {
+          post {
+            entity(as[WrappedLocation]) { case WrappedLocation(loc, lastPing) ⇒
+              completeWith(instanceOf[Seq[Location]]) {
+                completer ⇒ dao.recordRefresh(loc, lastPing) map completer
               }
             }
-      }
+          }
+        }
       }
 }

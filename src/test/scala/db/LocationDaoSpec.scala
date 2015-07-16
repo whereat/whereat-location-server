@@ -5,7 +5,6 @@ import org.scalatest.time.{Seconds, Span}
 import org.scalatest._
 import slick.driver.H2Driver.api._
 import support.SampleData.{n17, s17}
-import scala.concurrent.ExecutionContext.global
 
 /**
  * Author: @aguestuser

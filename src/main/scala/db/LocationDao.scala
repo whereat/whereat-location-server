@@ -3,7 +3,6 @@ package db
 import model.Location
 import slick.driver.H2Driver.api._
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.global
 
 /**
  * Author: @aguestuser
@@ -33,9 +32,5 @@ trait LocationDao extends LocationQueries {
 
   //TODO test sad path / error handling
 }
-
-//object LocationDao extends LocationDao {
-//  val db = Database.forConfig("devDb")
-//}
 
 case class LocationDaoImpl(db: Database) extends LocationDao

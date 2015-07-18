@@ -1,7 +1,6 @@
 package support
 
-import model.{JsonProtocols, WrappedLocation, LocationJsonProtocol, Location}
-import spray.json._
+import model.{JsonProtocols, Location}
 
 /**
  * Author: @aguestuser
@@ -76,6 +75,16 @@ object SampleData extends JsonProtocols {
       |  "lastPing": 1505606400000
       |}""".stripMargin
 
+  val wrappedS17Json_noLastPing =
+    """{
+      |  "location": {
+      |    "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |    "lat": 40.7092529,
+      |    "lon": -74.0112551,
+      |    "time": 1505606400000
+      |  }
+      |}""".stripMargin
+
   val n17 = Location(
     id = "8d3f4369-e829-4ca5-8d9b-123264aeb469",
     lat = 40.706877,
@@ -91,6 +100,7 @@ object SampleData extends JsonProtocols {
       |}""".stripMargin
 
   val n17JsonCompact = """{"id":"8d3f4369-e829-4ca5-8d9b-123264aeb469","lat":40.706877,"lon":-74.0112654,"time":1510876800000}"""
+
 
   val s17n17JsonSeq =
     """[{

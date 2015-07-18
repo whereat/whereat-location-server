@@ -2,7 +2,7 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.server.MalformedRequestContentRejection
+import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
 import org.scalamock.scalatest.MockFactory
@@ -28,94 +28,120 @@ with BeforeAndAfterEach {
 
   val fakeDao = mock[LocationDao]
   val rte = route(fakeDao)
+  val rejectMsg = { r:Rejection ⇒ r match { case MalformedRequestContentRejection(msg,_) ⇒ msg } }
 
-  "The API service" should {
+  "The API service" when {
 
-    "respond to GET/hello with 'hello world!'" in {
+    "receiving GET /hello" should {
 
-      Get("/hello") ~> rte ~> check {
-        responseAs[String] shouldEqual "hello world!"
-      }
-    }
+      "respond with 'hello world!" in {
 
-    "respond to valid POST/locations/init requests with all locations in DB" in {
-
-      fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
-
-      Post("/locations/init", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
-        responseAs[String] shouldEqual s17n17JsonSeq
-      }
-    }
-
-    "respond to POST/locations/init requests with incorrectly ordered fields" in {
-
-      fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
-
-      Post("/locations/init", HttpEntity(`application/json`, s17Json_wrongOrder)) ~> rte ~> check {
-        responseAs[String] shouldEqual s17n17JsonSeq
-      }
-    }
-
-    "reject POST/locations/init requests with missing fields" in {
-
-      fakeDao.init _ expects * never()
-
-      Post("/locations/init", HttpEntity(`application/json`, s17Json_missingField)) ~> rte ~> check {
-
-        rejection shouldBe a[MalformedRequestContentRejection]
-        rejection match {
-          case MalformedRequestContentRejection(msg, _) ⇒
-            msg shouldEqual "Object is missing required member 'time'"
+        Get("/hello") ~> rte ~> check {
+          responseAs[String] shouldEqual "hello world!"
         }
       }
     }
 
-    "reject POST/locations/init requests with type errors" in {
+    "receiving POST /locations/init" should {
 
-      fakeDao.init _ expects * never()
+      "respond to valid requests with list of all locations" in {
 
-      Post("/locations/init", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
+        fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
 
-        rejection shouldBe a[MalformedRequestContentRejection]
-        rejection match {
-          case MalformedRequestContentRejection(msg, _) ⇒
-            msg shouldEqual """Expected Double as JsNumber, but got "40.7092529""""
+        Post("/locations/init", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
+          responseAs[String] shouldEqual s17n17JsonSeq
+        }
+      }
+
+      "handle requests with incorrectly ordered fields" in {
+
+        fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
+
+        Post("/locations/init", HttpEntity(`application/json`, s17Json_wrongOrder)) ~> rte ~> check {
+          responseAs[String] shouldEqual s17n17JsonSeq
+        }
+      }
+
+      "reject requests with missing fields" in {
+
+        fakeDao.init _ expects * never()
+
+        Post("/locations/init", HttpEntity(`application/json`, s17Json_missingField)) ~> rte ~> check {
+
+          rejection shouldBe a[MalformedRequestContentRejection]
+          rejection match {
+            case MalformedRequestContentRejection(msg, _) ⇒
+              msg shouldEqual "Object is missing required member 'time'"
+          }
+        }
+      }
+
+      "reject requests with type errors" in {
+
+        fakeDao.init _ expects * never()
+
+        Post("/locations/init", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
+
+          rejection shouldBe a[MalformedRequestContentRejection]
+          rejectMsg(rejection)shouldEqual """Expected Double as JsNumber, but got "40.7092529""""
+        }
+      }
+
+      "reject requests with incorrectly formatted JSON" in {
+
+        fakeDao.init _ expects * never()
+
+        Post("/locations/init", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
+
+          rejection shouldBe a[MalformedRequestContentRejection]
+          rejectMsg(rejection) should include("Unexpected character")
+
         }
       }
     }
 
-    "reject POST/locations/init requests with incorrectly formatted JSON" in {
+    "receiving POST /locations/refresh" should {
 
-      fakeDao.init _ expects * never()
+      "respond to valid requests with all locations received since last ping from requesting user" in {
 
-      Post("/locations/init", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
+        fakeDao.refresh _ expects(s17, s17.time) returning Future.successful(Seq(n17)) once()
 
-        rejection shouldBe a[MalformedRequestContentRejection]
-        rejection match {
-          case MalformedRequestContentRejection(msg, _) ⇒
-            msg should include("Unexpected character")
+        Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json)) ~> rte ~> check {
+          responseAs[String] shouldEqual n17JsonSeq
+        }
+      }
+
+      "reject requests that send Location JSON instead of WrappedLocation" in {
+
+        fakeDao.init _ expects * never()
+
+        Post("/locations/refresh", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
+          rejection shouldBe a[MalformedRequestContentRejection]
+          rejectMsg(rejection) should include ("Object is missing required member 'location'")
+        }
+      }
+
+      "reject requests that omit a `lastPing` field" in {
+
+        fakeDao.init _ expects * never()
+
+        Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json_noLastPing)) ~> rte ~> check {
+          rejection shouldBe a[MalformedRequestContentRejection]
+          rejectMsg(rejection) should include ("Object is missing required member 'lastPing'")
         }
       }
     }
+    
+    "receiving POST /locations/erase" should {
 
-    "respond to valid POST/locations/refresh requests with all locations since last ping" in {
+      "respond with notification that DB has been erased" in {
 
-      fakeDao.refresh _ expects(s17, s17.time) returning Future.successful(Seq(n17)) once()
+        fakeDao.erase _ expects() returning Future.successful("Database erased.")
 
-      Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json)) ~> rte ~> check {
-        responseAs[String] shouldEqual n17JsonSeq
+        Post("/locations/erase") ~> rte ~> check {
+          responseAs[String] shouldEqual "Database erased."
+        }
       }
-    }
-
-    "respond to GET /locations/erase with notification that DB has been erased" in {
-
-      fakeDao.erase _ expects() returning Future.successful("Database erased.")
-
-      Post("/locations/erase") ~> rte ~> check {
-        responseAs[String] shouldEqual "Database erased."
-      }
-
     }
   }
-
 }

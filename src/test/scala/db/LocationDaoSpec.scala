@@ -42,7 +42,7 @@ with ScalaFutures {
     "handling an initial ping" should {
 
       "record the location and return all locations in the DB" in {
-        dao.recordInit(n17).futureValue shouldEqual Seq(s17, n17)
+        dao.init(n17).futureValue shouldEqual Seq(s17, n17)
       }
     }
 
@@ -50,7 +50,7 @@ with ScalaFutures {
 
       "record the location and return all locations since last ping" in {
         dao.db.run(insert(n17)).futureValue
-        dao.recordRefresh(n17, s17.time).futureValue shouldEqual Seq(n17)
+        dao.refresh(n17, s17.time).futureValue shouldEqual Seq(n17)
       }
     }
   }

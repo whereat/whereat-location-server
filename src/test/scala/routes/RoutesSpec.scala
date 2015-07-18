@@ -2,12 +2,12 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection, Route}
+import akka.http.scaladsl.server.MalformedRequestContentRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, Matchers, WordSpec}
-import support.SampleData._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import support.SampleData._
 
 //import org.scalamock.scalatest.proxy.MockFactory
 
@@ -40,7 +40,7 @@ with BeforeAndAfterEach {
 
     "respond to valid POST/locations/init requests with all locations in DB" in {
 
-      fakeDao.recordInit _ expects s17 returning Future.successful(Seq(s17, n17)) once()
+      fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
 
       Post("/locations/init", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
         responseAs[String] shouldEqual s17n17JsonSeq
@@ -49,7 +49,7 @@ with BeforeAndAfterEach {
 
     "respond to POST/locations/init requests with incorrectly ordered fields" in {
 
-      fakeDao.recordInit _ expects s17 returning Future.successful(Seq(s17, n17)) once()
+      fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
 
       Post("/locations/init", HttpEntity(`application/json`, s17Json_wrongOrder)) ~> rte ~> check {
         responseAs[String] shouldEqual s17n17JsonSeq
@@ -58,7 +58,7 @@ with BeforeAndAfterEach {
 
     "reject POST/locations/init requests with missing fields" in {
 
-      fakeDao.recordInit _ expects * never()
+      fakeDao.init _ expects * never()
 
       Post("/locations/init", HttpEntity(`application/json`, s17Json_missingField)) ~> rte ~> check {
 
@@ -72,7 +72,7 @@ with BeforeAndAfterEach {
 
     "reject POST/locations/init requests with type errors" in {
 
-      fakeDao.recordInit _ expects * never()
+      fakeDao.init _ expects * never()
 
       Post("/locations/init", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
 
@@ -86,7 +86,7 @@ with BeforeAndAfterEach {
 
     "reject POST/locations/init requests with incorrectly formatted JSON" in {
 
-      fakeDao.recordInit _ expects * never()
+      fakeDao.init _ expects * never()
 
       Post("/locations/init", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
 
@@ -100,11 +100,21 @@ with BeforeAndAfterEach {
 
     "respond to valid POST/locations/refresh requests with all locations since last ping" in {
 
-      fakeDao.recordRefresh _ expects(s17, s17.time) returning Future.successful(Seq(n17)) once()
+      fakeDao.refresh _ expects(s17, s17.time) returning Future.successful(Seq(n17)) once()
 
       Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json)) ~> rte ~> check {
         responseAs[String] shouldEqual n17JsonSeq
       }
+    }
+
+    "respond to GET /locations/erase with notification that DB has been erased" in {
+
+      fakeDao.erase _ expects() returning Future.successful("Database erased.")
+
+      Get("/locations/erase") ~> rte ~> check {
+        responseAs[String] shouldEqual "Database erased."
+      }
+
     }
   }
 

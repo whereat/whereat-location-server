@@ -14,7 +14,7 @@ trait LocationDao extends LocationQueries {
   implicit val ec = scala.concurrent.ExecutionContext.global
   val db: Database
 
-  def recordInit(loc: Location): Future[Seq[Location]] =
+  def init(loc: Location): Future[Seq[Location]] =
     db.run {
       for {
         l ← insert(loc)
@@ -22,13 +22,16 @@ trait LocationDao extends LocationQueries {
       } yield ls
     }
 
-  def recordRefresh(loc: Location, lastPing: Long): Future[Seq[Location]] =
+  def refresh(loc: Location, lastPing: Long): Future[Seq[Location]] =
     db.run {
       for {
         l ← update(loc.id, loc)
         ls ← allSince(lastPing).result
       } yield ls
     }
+
+  def erase: Future[String] =
+    db.run { for {_ ← clear } yield "Database erased." }
 
   //TODO test sad path / error handling
 }

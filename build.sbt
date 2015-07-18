@@ -14,6 +14,7 @@ libraryDependencies ++= {
   val akkaStreamVersion = "1.0-RC4"
   val akkaVersion = "2.3.12"
   val h2Version = "1.4.187"
+  val hikariCpVersion = "2.3.9"
   val scalaMockVersion = "3.2"
   val scalaTestVersion = "2.2.5"
   val slickVersion = "3.0.0"
@@ -29,10 +30,12 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %% "akka-http-testkit-experimental"     % akkaStreamVersion,
     "com.typesafe.akka"   %% "akka-http-spray-json-experimental"  % akkaStreamVersion,
     "com.typesafe.slick"  %% "slick"                              % slickVersion,
+    "com.zaxxer"          % "HikariCP"                            % hikariCpVersion,
+    "io.spray"            %% "spray-json"                         % sprayJsonVersion,
     "org.slf4j"           %  "slf4j-nop"                          % slf4jVersion,
-    "org.scalamock" %% "scalamock-scalatest-support" % scalaMockVersion % "test",
+
+    "org.scalamock"       %% "scalamock-scalatest-support"        % scalaMockVersion % "test",
     "org.scalatest"       %% "scalatest"                          % scalaTestVersion % "test",
-    "com.typesafe.akka"   %% "akka-testkit"                       % akkaVersion % "test",
-    "io.spray"            %% "spray-json"                         % sprayJsonVersion
+    "com.typesafe.akka"   %% "akka-testkit"                       % akkaVersion % "test"
   )
 }

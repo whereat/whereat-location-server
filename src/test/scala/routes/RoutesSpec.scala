@@ -111,7 +111,7 @@ with BeforeAndAfterEach {
 
       fakeDao.erase _ expects() returning Future.successful("Database erased.")
 
-      Get("/locations/erase") ~> rte ~> check {
+      Post("/locations/erase") ~> rte ~> check {
         responseAs[String] shouldEqual "Database erased."
       }
 

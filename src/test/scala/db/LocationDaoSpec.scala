@@ -53,5 +53,13 @@ with ScalaFutures {
         dao.refresh(n17, s17.time).futureValue shouldEqual Seq(n17)
       }
     }
+
+    "handling an erase request" should {
+
+      "clear the locations table" in {
+        dao.erase.futureValue shouldEqual "Database erased."
+        dao.db.run(locations.size.result).futureValue shouldEqual 0
+      }
+    }
   }
 }

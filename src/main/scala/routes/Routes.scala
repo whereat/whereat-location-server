@@ -47,7 +47,7 @@ trait Routes extends JsonProtocols {
           }
         } ~
         path("erase") {
-          get {
+          post {
             complete {
               dao.erase
             }

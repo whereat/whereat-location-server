@@ -30,8 +30,9 @@ trait LocationDao extends LocationQueries {
       } yield ls
     }
 
-  def erase: Future[String] =
-    db.run { for {_ ← clear } yield "Database erased." }
+  def remove(id: String): Future[Int] = db.run { delete(id) }
+
+  def erase: Future[Int] = db.run { clear }
 
   //TODO test sad path / error handling
 }

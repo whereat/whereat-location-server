@@ -46,10 +46,19 @@ trait Routes extends JsonProtocols {
             }
           }
         } ~
+        path("remove") {
+          post {
+            entity(as[String]) { id ⇒
+              complete {
+                dao.remove(id) map { n ⇒ s"$n record(s) deleted." }
+              }
+            }
+          }
+        } ~
         path("erase") {
           post {
             complete {
-              dao.erase
+              dao.erase map { n ⇒ s"Database erased. $n record(s) deleted."}
             }
           }
         }

@@ -54,10 +54,23 @@ with ScalaFutures {
       }
     }
 
+    "hanlding a remove request" should {
+
+      "delete an existing resource" in {
+        dao.remove(s17.id).futureValue shouldEqual 1
+      }
+
+      "not delete a non-existent resource" in {
+        dao.remove("hi_there!").futureValue shouldEqual 0
+      }
+
+    }
+
     "handling an erase request" should {
 
-      "clear the locations table" in {
-        dao.erase.futureValue shouldEqual "Database erased."
+      "delete all rows in the locations table" in {
+        dao.db.run(insert(n17)).futureValue
+        dao.erase.futureValue shouldEqual 2
         dao.db.run(locations.size.result).futureValue shouldEqual 0
       }
     }

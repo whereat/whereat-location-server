@@ -131,15 +131,38 @@ with BeforeAndAfterEach {
         }
       }
     }
-    
+
+    "receiving POST /locations/remove" should {
+
+      "respond to request matching existing resource with notification of its deletion" in {
+
+        fakeDao.remove _ expects s17.id returning Future.successful(1)
+
+        Post("/locations/remove", HttpEntity(`application/json`, s17.id)) ~> rte ~> check {
+          responseAs[String] shouldEqual "1 record(s) deleted."
+        }
+      }
+
+      "respond to request matching non-existent resource with notification of no deletions" in {
+
+        fakeDao.remove _ expects "hi there!" returning Future.successful(0)
+
+        Post("/locations/remove", HttpEntity(`application/json`, "hi there!")) ~> rte ~> check {
+          responseAs[String] shouldEqual "0 record(s) deleted."
+        }
+      }
+    }
+
+
+
     "receiving POST /locations/erase" should {
 
       "respond with notification that DB has been erased" in {
 
-        fakeDao.erase _ expects() returning Future.successful("Database erased.")
+        fakeDao.erase _ expects() returning Future.successful(3)
 
         Post("/locations/erase") ~> rte ~> check {
-          responseAs[String] shouldEqual "Database erased."
+          responseAs[String] shouldEqual "Database erased. 3 record(s) deleted."
         }
       }
     }

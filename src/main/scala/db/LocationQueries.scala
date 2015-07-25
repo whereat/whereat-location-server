@@ -10,6 +10,9 @@ import slick.driver.H2Driver.api._
  */
 
 trait LocationQueries {
+
+  implicit val ec = scala.concurrent.ExecutionContext.global
+
   val locations = TableQuery[Locations]
 
   val createSchema = locations.schema.create
@@ -25,4 +28,10 @@ trait LocationQueries {
 
   val delete = { id: String ⇒ fetch(id).delete }
   val clear = locations.delete
+
+  val save = { l: Location ⇒
+    fetch(l.id).exists.result.flatMap {
+      if(_) update(l.id, l) else insert(l)
+    }.transactionally
+  }
 }

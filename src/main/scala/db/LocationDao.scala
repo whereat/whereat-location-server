@@ -11,13 +11,12 @@ import scala.concurrent.Future
 
 trait LocationDao extends LocationQueries {
 
-  implicit val ec = scala.concurrent.ExecutionContext.global
   val db: Database
 
   def init(loc: Location): Future[Seq[Location]] =
     db.run {
       for {
-        l ← insert(loc)
+        l ← save(loc)
         ls ← locations.result
       } yield ls
     }

@@ -20,8 +20,6 @@ class LocationQueriesSpec
   with ScalaFutures {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
-  implicit val ec = scala.concurrent.ExecutionContext.global
-
   var db: Database = _
 
   before {
@@ -162,6 +160,32 @@ class LocationQueriesSpec
       rowCount shouldEqual 0
     }
 
+    "save a location that isn't in the DB yet" in {
+
+      val opCount = db.run {
+        for {
+          n ← save(s17)
+        } yield n
+      }.futureValue
+
+      opCount shouldEqual 1
+      db.run(locations.size.result).futureValue shouldEqual 1
+      db.run(fetch(s17.id).result.head).futureValue shouldEqual s17
+    }
+
+    "save a location that's already in the DB" in {
+
+      val opCounts = db.run {
+        for {
+          m ← insert(s17)
+          n ← save(s17_)
+        } yield (m, n)
+      }.futureValue
+
+      opCounts shouldEqual (1,1)
+      db.run(locations.size.result).futureValue shouldEqual 1
+      db.run(fetch(s17.id).result.head).futureValue shouldEqual s17_
+    }
   }
 
 }

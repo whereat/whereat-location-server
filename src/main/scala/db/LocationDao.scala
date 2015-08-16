@@ -1,6 +1,6 @@
 package db
 
-import model.Location
+import model.{WrappedLocation, Location}
 import slick.driver.H2Driver.api._
 import scala.concurrent.Future
 
@@ -13,6 +13,14 @@ trait LocationDao extends LocationQueries {
 
   val db: Database
 
+  def put(wl: WrappedLocation): Future[Seq[Location]] =
+    db.run {
+      for {
+        l ← save(wl.location)
+        ls ← allSince(wl.lastPing).result
+      } yield ls
+    }
+
   def init(loc: Location): Future[Seq[Location]] =
     db.run {
       for {
@@ -21,7 +29,7 @@ trait LocationDao extends LocationQueries {
       } yield ls
     }
 
-  def refresh(loc: Location, lastPing: Long): Future[Seq[Location]] =
+  def refresh(lastPing: Long, loc: Location): Future[Seq[Location]] =
     db.run {
       for {
         l ← update(loc.id, loc)

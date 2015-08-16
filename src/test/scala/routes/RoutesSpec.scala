@@ -2,10 +2,11 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Credentials`, HttpOrigin, `Access-Control-Allow-Origin`}
-import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Origin`}
+import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
+import model.WrappedLocation
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import support.SampleData._
@@ -39,11 +40,12 @@ with BeforeAndAfterEach {
 
         Get("/hello") ~> rte ~> check {
           header("Access-Control-Allow-Origin") shouldEqual
-            Some(`Access-Control-Allow-Origin`(HttpOrigin("http://whereat.io")))
+            Some(`Access-Control-Allow-Origin`.`*`)
           header("Access-Control-Allow-Credentials") shouldEqual
-            Some(`Access-Control-Allow-Credentials`(true))
+            Some(`Access-Control-Allow-Credentials`(false))
           header("Access-Control-Allow-Headers") shouldEqual
-            Some(`Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With"))
+            Some(`Access-Control-Allow-Headers`(
+              "Accept, Authorization", "Content-Type", "Origin", "X-Requested-With"))
         }
       }
     }
@@ -54,6 +56,100 @@ with BeforeAndAfterEach {
 
         Get("/hello") ~> rte ~> check {
           responseAs[String] shouldEqual "hello world!"
+        }
+      }
+    }
+
+    "receiving POST /locations/update" when {
+
+      "request is well-formed" when {
+
+        "it is user's initial location post" should {
+
+          "respond to valid requests with list of all locations" in {
+
+            fakeDao.put _ expects WrappedLocation(-1L, n17) returning Future.successful(Seq(s17,n17)) once()
+
+            Post("/locations/update", HttpEntity(`application/json`, n17ReqInit)) ~> rte ~> check {
+              responseAs[String] shouldEqual n17ResponseInit
+            }
+          }
+        }
+
+        "user has already posted" when {
+
+          "no users have posted since user's last post" should {
+
+            "return user's last location" in {
+              fakeDao.put _ expects WrappedLocation(n17.time, n17_) returning Future.successful(Seq(n17_)) once()
+
+              Post("/locations/update", HttpEntity(`application/json`, n17ReqRefreshLatest)) ~> rte ~> check {
+                responseAs[String] shouldEqual n17ResponseRefreshLatest
+              }
+            }
+          }
+
+          "other users have posted since user's last post" should {
+
+            "return all locations posted since user's last post" in {
+
+              fakeDao.put _ expects WrappedLocation(200L, n17_) returning Future.successful(Seq(s17,n17_)) once()
+
+              Post("/locations/update", HttpEntity(`application/json`, n17ReqRefreshNotLatest)) ~> rte ~> check {
+                responseAs[String] shouldEqual n17ResponseRefreshNotLatest
+              }
+            }
+          }
+        }
+      }
+
+      "request is not well-formed" should {
+
+        "handle requests with incorrectly ordered fields" in {
+
+          fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
+
+          Post("/locations/init", HttpEntity(`application/json`, s17Json_wrongOrder)) ~> rte ~> check {
+            responseAs[String] shouldEqual s17n17JsonSeq
+          }
+        }
+
+        "reject requests with missing fields" in {
+
+          fakeDao.init _ expects * never()
+
+          Post("/locations/init", HttpEntity(`application/json`, s17Json_missingField)) ~> rte ~> check {
+
+            rejection shouldBe a[MalformedRequestContentRejection]
+            rejection match {
+              case MalformedRequestContentRejection(msg, _) ⇒
+                msg shouldEqual "Object is missing required member 'time'"
+            }
+          }
+        }
+
+        "reject requests with type errors" in {
+
+          fakeDao.init _ expects * never()
+
+          Post("/locations/init", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
+
+            rejection shouldBe a[MalformedRequestContentRejection]
+            rejectMsg(rejection)shouldEqual """Expected Double as JsNumber, but got "40.7092529""""
+          }
+        }
+      }
+
+
+      "reject requests with incorrectly formatted JSON" in {
+
+        fakeDao.init _ expects * never()
+
+        Post("/locations/init", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
+
+          rejection shouldBe a[MalformedRequestContentRejection]
+          rejectMsg(rejection) should include("Unexpected character")
+
         }
       }
     }
@@ -120,7 +216,7 @@ with BeforeAndAfterEach {
 
       "respond to valid requests with all locations received since last ping from requesting user" in {
 
-        fakeDao.refresh _ expects(s17, s17.time) returning Future.successful(Seq(n17)) once()
+        fakeDao.refresh _ expects(s17.time, s17) returning Future.successful(Seq(n17)) once()
 
         Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json)) ~> rte ~> check {
           responseAs[String] shouldEqual n17JsonSeq
@@ -133,7 +229,7 @@ with BeforeAndAfterEach {
 
         Post("/locations/refresh", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
           rejection shouldBe a[MalformedRequestContentRejection]
-          rejectMsg(rejection) should include ("Object is missing required member 'location'")
+          rejectMsg(rejection) should include ("Object is missing required member 'lastPing'")
         }
       }
 

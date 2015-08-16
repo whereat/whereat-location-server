@@ -16,7 +16,7 @@ trait CorsSupport extends Config {
 
   lazy val allowed = { HttpOrigin(allowedOrigin) }
 
-  val corsHandler = { r: Route ⇒
+val corsHandler = { r: Route ⇒
     accessControlHeaders {
       preflightRequestHandler ~ r
     }

@@ -30,6 +30,15 @@ trait Routes extends CorsSupport with JsonProtocols {
         }
       } ~
         pathPrefix("locations") {
+          path("update") {
+            post {
+              entity(as[WrappedLocation]) { wLoc ⇒
+                completeWith(instanceOf[Seq[Location]]) {
+                  completer ⇒ dao.put(wLoc) map completer
+                }
+              }
+            }
+          } ~
           path("init") {
             post {
               entity(as[Location]) { loc ⇒
@@ -39,31 +48,31 @@ trait Routes extends CorsSupport with JsonProtocols {
               }
             }
           } ~
-            path("refresh") {
-              post {
-                entity(as[WrappedLocation]) { case WrappedLocation(loc, lastPing) ⇒
-                  completeWith(instanceOf[Seq[Location]]) {
-                    completer ⇒ dao.refresh(loc, lastPing) map completer
-                  }
-                }
-              }
-            } ~
-            path("remove") {
-              post {
-                entity(as[String]) { id ⇒
-                  complete {
-                    dao.remove(id) map { n ⇒ s"$n record(s) deleted." }
-                  }
-                }
-              }
-            } ~
-            path("erase") {
-              post {
-                complete {
-                  dao.erase map { n ⇒ s"Database erased. $n record(s) deleted."}
+          path("refresh") {
+            post {
+              entity(as[WrappedLocation]) { case WrappedLocation(lastPing, loc) ⇒
+                completeWith(instanceOf[Seq[Location]]) {
+                  completer ⇒ dao.refresh(lastPing, loc) map completer
                 }
               }
             }
+          } ~
+          path("remove") {
+            post {
+              entity(as[String]) { id ⇒
+                complete {
+                  dao.remove(id) map { n ⇒ s"$n record(s) deleted." }
+                }
+              }
+            }
+          } ~
+          path("erase") {
+            post {
+              complete {
+                dao.erase map { n ⇒ s"Database erased. $n record(s) deleted."}
+              }
+            }
+          }
         }
     }
 }

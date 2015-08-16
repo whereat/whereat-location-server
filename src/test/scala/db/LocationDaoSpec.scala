@@ -1,5 +1,6 @@
 package db
 
+import model.WrappedLocation
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest._
@@ -39,6 +40,36 @@ with ScalaFutures {
 
   "The Location DAO" when {
 
+    "handling a `put` request" when {
+
+      "it is a user's initial location post" should {
+
+        "insert the location and return all locations in the DB" in {
+          dao.put(WrappedLocation(lastPing = -1L, location = n17))
+            .futureValue shouldEqual Seq(s17, n17)
+        }
+      }
+
+      "the user has already posted a location" when {
+
+        "no users have posted since user's last post" should {
+
+          "update the user's location and return it" in {
+            dao.db.run(insert(n17)).futureValue
+            dao.put(WrappedLocation(s17.time,n17)).futureValue shouldEqual Seq(n17)
+          }
+        }
+
+        "other users have posted since user's last post" should {
+
+          "update the user's location and return all locations posted since user's last post" in {
+            dao.db.run(insert(n17)).futureValue
+            dao.put(WrappedLocation(-1L,n17)).futureValue shouldEqual Seq(s17,n17)
+          }
+        }
+      }
+    }
+
     "handling an initial ping" should {
 
       "record the location and return all locations in the DB" in {
@@ -50,7 +81,7 @@ with ScalaFutures {
 
       "record the location and return all locations since last ping" in {
         dao.db.run(insert(n17)).futureValue
-        dao.refresh(n17, s17.time).futureValue shouldEqual Seq(n17)
+        dao.refresh(s17.time, n17).futureValue shouldEqual Seq(n17)
       }
     }
 

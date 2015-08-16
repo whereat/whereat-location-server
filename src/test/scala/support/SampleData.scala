@@ -64,6 +64,7 @@ object SampleData extends JsonProtocols {
 
   val s17JsonCompact = """{"id":"75782cd4-1a42-4af1-9130-05c63b2aa9ff","lat": 40.7092529,"lon": -74.0112551,"time": 1505606400000 }"""
 
+
   val wrappedS17Json =
     """{
       |  "location": {
@@ -92,6 +93,13 @@ object SampleData extends JsonProtocols {
     time = 1510876800000L
   )
 
+  val n17_ = Location(
+    id = "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+    lat = 40.706877,
+    lon = -74.0112654,
+    time = 1510876800001L
+  )
+
   val n17Json =
     """{
       |  "id":"8d3f4369-e829-4ca5-8d9b-123264aeb469",
@@ -101,6 +109,74 @@ object SampleData extends JsonProtocols {
 
   val n17JsonCompact = """{"id":"8d3f4369-e829-4ca5-8d9b-123264aeb469","lat":40.706877,"lon":-74.0112654,"time":1510876800000}"""
 
+
+  val n17ReqInit =
+    """{
+      |  "lastPing": -1,
+      |  "location": {
+      |    "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |    "lat": 40.706877,
+      |    "lon": -74.0112654,
+      |    "time": 1510876800000
+      |  }
+      |}""".stripMargin
+
+
+  val n17ReqRefreshLatest =
+    """{
+      |  "lastPing": 1510876800000,
+      |  "location": {
+      |    "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |    "lat": 40.706877,
+      |    "lon": -74.0112654,
+      |    "time": 1510876800001
+      |  }
+      |}""".stripMargin
+
+  val n17ReqRefreshNotLatest =
+    """{
+      |  "lastPing": 200,
+      |  "location": {
+      |    "id":"8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |    "lat":40.706877,"lon":-74.0112654,
+      |    "time":1510876800001
+      |  }
+      |}""".stripMargin
+
+  val n17ResponseInit =
+    """[{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lat": 40.7092529,
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}, {
+      |  "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |  "lat": 40.706877,
+      |  "lon": -74.0112654,
+      |  "time": 1510876800000
+      |}]""".stripMargin
+
+  val n17ResponseRefreshLatest =
+    """[{
+      |  "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |  "lat": 40.706877,
+      |  "lon": -74.0112654,
+      |  "time": 1510876800001
+      |}]""".stripMargin
+
+
+  val n17ResponseRefreshNotLatest =
+    """[{
+      |  "id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      |  "lat": 40.7092529,
+      |  "lon": -74.0112551,
+      |  "time": 1505606400000
+      |}, {
+      |  "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |  "lat": 40.706877,
+      |  "lon": -74.0112654,
+      |  "time": 1510876800001
+      |}]""".stripMargin
 
   val s17n17JsonSeq =
     """[{

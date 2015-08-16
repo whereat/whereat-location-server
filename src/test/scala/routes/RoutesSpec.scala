@@ -2,6 +2,7 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Credentials`, HttpOrigin, `Access-Control-Allow-Origin`}
 import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
@@ -31,6 +32,21 @@ with BeforeAndAfterEach {
   val rejectMsg = { r:Rejection ⇒ r match { case MalformedRequestContentRejection(msg,_) ⇒ msg } }
 
   "The API service" when {
+
+    "receiving any request" should {
+
+      "respond with CORS headers" in {
+
+        Get("/hello") ~> rte ~> check {
+          header("Access-Control-Allow-Origin") shouldEqual
+            Some(`Access-Control-Allow-Origin`(HttpOrigin("http://whereat.io")))
+          header("Access-Control-Allow-Credentials") shouldEqual
+            Some(`Access-Control-Allow-Credentials`(true))
+          header("Access-Control-Allow-Headers") shouldEqual
+            Some(`Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With"))
+        }
+      }
+    }
 
     "receiving GET /hello" should {
 

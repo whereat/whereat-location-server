@@ -17,4 +17,5 @@ trait Config {
   val httpInterface = httpConfig.getString("interface")
   val httpPort = Properties.envOrElse("PORT", httpConfig.getString("port")).toInt
   val db = Database.forConfig("devDb")
+  val allowedOrigin = config.getString("cors.allowed-origin")
  }

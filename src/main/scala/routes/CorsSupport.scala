@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives._
 import cfg.Config
 
 /**
- * Author: @aguestuser
+ * Author: @aguestuser, borrowed from: https://groups.google.com/forum/#!topic/akka-user/5RCZIJt7jHo
  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
  */
 
@@ -25,8 +25,9 @@ trait CorsSupport extends Config {
   private def accessControlHeaders: Directive0 = {
     mapResponseHeaders { headers ⇒
       `Access-Control-Allow-Origin`.`*` +:
-      `Access-Control-Allow-Credentials`(true) +:
-      `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With") +:
+      `Access-Control-Allow-Credentials`(false) +:
+      `Access-Control-Allow-Headers`(
+        "Accept, Authorization", "Content-Type", "Origin", "X-Requested-With") +:
       headers
     }
   }

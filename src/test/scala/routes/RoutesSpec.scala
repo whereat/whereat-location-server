@@ -2,8 +2,8 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Origin`}
-import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Credentials`, HttpOrigin, `Access-Control-Allow-Origin`}
+import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
 import org.scalamock.scalatest.MockFactory
@@ -35,11 +35,11 @@ with BeforeAndAfterEach {
 
     "receiving any request" should {
 
-      "respond with CO  RS headers" in {
+      "respond with CORS headers" in {
 
         Get("/hello") ~> rte ~> check {
           header("Access-Control-Allow-Origin") shouldEqual
-            Some(`Access-Control-Allow-Origin`.`*`)
+            Some(`Access-Control-Allow-Origin`(HttpOrigin("http://whereat.io")))
           header("Access-Control-Allow-Credentials") shouldEqual
             Some(`Access-Control-Allow-Credentials`(true))
           header("Access-Control-Allow-Headers") shouldEqual

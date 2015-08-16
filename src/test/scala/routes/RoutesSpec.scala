@@ -43,7 +43,7 @@ with BeforeAndAfterEach {
           header("Access-Control-Allow-Credentials") shouldEqual
             Some(`Access-Control-Allow-Credentials`(true))
           header("Access-Control-Allow-Headers") shouldEqual
-            Some(`Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With"))
+            Some(`Access-Control-Allow-Headers`("Accept, Authorization", "Content-Type", "Origin", "X-Requested-With"))
         }
       }
     }

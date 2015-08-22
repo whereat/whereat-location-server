@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import db.LocationDao
-import model.{JsonProtocols, Location, WrappedLocation}
+import model.{User, JsonProtocols, Location, WrappedLocation}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -59,7 +59,7 @@ trait Routes extends CorsSupport with JsonProtocols {
           } ~
           path("remove") {
             post {
-              entity(as[String]) { id ⇒
+              entity(as[User]) { case User(id) ⇒
                 complete {
                   dao.remove(id) map { n ⇒ s"$n record(s) deleted." }
                 }

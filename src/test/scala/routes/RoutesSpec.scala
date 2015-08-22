@@ -250,7 +250,7 @@ with BeforeAndAfterEach {
 
         fakeDao.remove _ expects s17.id returning Future.successful(1)
 
-        Post("/locations/remove", HttpEntity(`application/json`, s17.id)) ~> rte ~> check {
+        Post("/locations/remove", HttpEntity(`application/json`, s17UserJson)) ~> rte ~> check {
           responseAs[String] shouldEqual "1 record(s) deleted."
         }
       }

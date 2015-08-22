@@ -8,3 +8,4 @@ package model
 trait JsonProtocols
   extends LocationJsonProtocol
   with WrappedLocationJsonProtocol
+  with UserJsonProtocol

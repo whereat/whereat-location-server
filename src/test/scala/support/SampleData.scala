@@ -1,6 +1,6 @@
 package support
 
-import model.{JsonProtocols, Location}
+import model.{User, JsonProtocols, Location}
 
 /**
  * Author: @aguestuser
@@ -15,6 +15,10 @@ object SampleData extends JsonProtocols {
     lon = -74.0112551,
     time = 1505606400000L
   )
+
+  val s17User = User(s17.id)
+
+  val s17UserJson = """{"id": "75782cd4-1a42-4af1-9130-05c63b2aa9ff" }"""
 
   val s17_ = Location(
     id = s17.id,

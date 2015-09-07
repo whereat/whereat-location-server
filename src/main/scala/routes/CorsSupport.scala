@@ -16,7 +16,7 @@ trait CorsSupport extends Config {
 
   lazy val allowed = { HttpOrigin(allowedOrigin) }
 
-val corsHandler = { r: Route ⇒
+  val corsHandler = { r: Route ⇒
     accessControlHeaders {
       preflightRequestHandler ~ r
     }
@@ -24,7 +24,7 @@ val corsHandler = { r: Route ⇒
 
   private def accessControlHeaders: Directive0 = {
     mapResponseHeaders { headers ⇒
-      `Access-Control-Allow-Origin`.`*` +:
+      `Access-Control-Allow-Origin`(allowed) +:
       `Access-Control-Allow-Credentials`(false) +:
       `Access-Control-Allow-Headers`(
         "Accept, Authorization", "Content-Type", "Origin", "X-Requested-With") +:

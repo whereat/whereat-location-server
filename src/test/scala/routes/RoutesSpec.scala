@@ -2,7 +2,7 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Origin`}
+import akka.http.scaladsl.model.headers.{HttpOrigin, `Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Origin`}
 import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
@@ -40,7 +40,7 @@ with BeforeAndAfterEach {
 
         Get("/hello") ~> rte ~> check {
           header("Access-Control-Allow-Origin") shouldEqual
-            Some(`Access-Control-Allow-Origin`.`*`)
+            Some(`Access-Control-Allow-Origin`(HttpOrigin("https://whereat.io")))
           header("Access-Control-Allow-Credentials") shouldEqual
             Some(`Access-Control-Allow-Credentials`(false))
           header("Access-Control-Allow-Headers") shouldEqual

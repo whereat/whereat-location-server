@@ -257,15 +257,16 @@ with BeforeAndAfterEach {
 
       "respond to request matching non-existent resource with notification of no deletions" in {
 
-        fakeDao.remove _ expects "hi there!" returning Future.successful(0)
+        fakeDao.remove _ expects s17.id returning Future.successful(0)
 
-        Post("/locations/remove", HttpEntity(`application/json`, "hi there!")) ~> rte ~> check {
-          responseAs[String] shouldEqual "0 record(s) deleted."
+        Post("/locations/remove", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
+          responseAs[String] shouldEqual
+            """{
+               |  "msg": "0 record(s) deleted."
+               |}""".stripMargin
         }
       }
     }
-
-
 
     "receiving POST /locations/erase" should {
 
@@ -274,7 +275,10 @@ with BeforeAndAfterEach {
         fakeDao.erase _ expects() returning Future.successful(3)
 
         Post("/locations/erase") ~> rte ~> check {
-          responseAs[String] shouldEqual "Database erased. 3 record(s) deleted."
+          responseAs[String] shouldEqual
+          """{
+             |  "msg": "Database erased. 3 record(s) deleted."
+             |}""".stripMargin
         }
       }
     }

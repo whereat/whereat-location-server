@@ -9,3 +9,4 @@ trait JsonProtocols
   extends LocationJsonProtocol
   with WrappedLocationJsonProtocol
   with UserJsonProtocol
+  with MessageJsonProtocol

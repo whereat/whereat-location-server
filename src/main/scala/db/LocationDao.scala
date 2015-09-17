@@ -13,27 +13,13 @@ trait LocationDao extends LocationQueries {
 
   val db: Database
 
+  def build : Future[Unit] = db.run { createSchema }
+
   def put(wl: WrappedLocation): Future[Seq[Location]] =
     db.run {
       for {
         l ← save(wl.location)
         ls ← allSince(wl.lastPing).result
-      } yield ls
-    }
-
-  def init(loc: Location): Future[Seq[Location]] =
-    db.run {
-      for {
-        l ← save(loc)
-        ls ← locations.result
-      } yield ls
-    }
-
-  def refresh(lastPing: Long, loc: Location): Future[Seq[Location]] =
-    db.run {
-      for {
-        l ← update(loc.id, loc)
-        ls ← allSince(lastPing).result
       } yield ls
     }
 

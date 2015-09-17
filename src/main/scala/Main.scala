@@ -1,14 +1,10 @@
-import java.util.concurrent.TimeUnit.{HOURS, MILLISECONDS}
-
-import actors.{Erase, EraseActor}
-import akka.actor.{ActorSystem, Cancellable, Props}
+import actors.Erasable
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import cfg.Config
-import db.{LocationDaoImpl, LocationQueries}
+import db.LocationDaoImpl
 import routes.Routes
-
-import scala.concurrent.duration.Duration
 
 
 /**
@@ -17,25 +13,18 @@ import scala.concurrent.duration.Duration
  */
 
 
-object Main extends App  with Config with Routes with LocationQueries {
+object Main
+  extends App with Config with Routes with Erasable {
 
   override implicit val system = ActorSystem()
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
-  db.run(createSchema).map { _ ⇒
+  val dao = LocationDaoImpl(db)
+
+  dao.build map { _ ⇒
     Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
     println(s"Server online at http://localhost:$httpPort")
-    eraseHourly(system)
-  }
-
-  def eraseHourly(system: ActorSystem) : Cancellable = {
-    val eraseActor = system.actorOf(Props[EraseActor])
-    system.scheduler.schedule(
-      Duration(0, MILLISECONDS),
-      Duration(1, HOURS),
-      eraseActor,
-      Erase
-    )
+    eraseHourly(system, dao)
   }
 }

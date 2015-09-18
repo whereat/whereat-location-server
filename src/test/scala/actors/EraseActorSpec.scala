@@ -1,8 +1,7 @@
 package actors
 
 import akka.actor.ActorSystem
-import akka.testkit.{TestKit, TestActorRef}
-import com.typesafe.config.ConfigFactory
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import db.LocationDao
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -14,17 +13,16 @@ import scala.concurrent.Future
  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
  */
 
-class EraseActorSpec
-  extends WordSpecLike
+class EraseActorSpec(_system: ActorSystem)
+  extends TestKit(_system)
+  with ImplicitSender
+  with WordSpecLike
   with Matchers
   with BeforeAndAfterAll
   with MockFactory {
 
-  implicit var system: ActorSystem = _
-
-  override def beforeAll(){ system = ActorSystem("TestActorSystem", ConfigFactory.load()) }
-  override def afterAll() = { TestKit.shutdownActorSystem(system) }
-
+  def this() = this(ActorSystem("EraseActorSpecSystem"))
+  override def afterAll() = TestKit.shutdownActorSystem(system)
 
   "EraseActor" should {
 

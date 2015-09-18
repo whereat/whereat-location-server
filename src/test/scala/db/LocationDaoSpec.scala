@@ -12,15 +12,15 @@ import support.SampleData.{n17, s17}
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-class LocationDaoSpec extends WordSpec
-with LocationQueries
-with Matchers
-with BeforeAndAfter
-with ScalaFutures {
+class LocationDaoSpec
+  extends WordSpec
+  with LocationQueries
+  with Matchers
+  with BeforeAndAfter
+  with ScalaFutures {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
   implicit val ec_ = scala.concurrent.ExecutionContext.global
-
   var dao: LocationDaoImpl = _
 
   before {
@@ -70,22 +70,7 @@ with ScalaFutures {
       }
     }
 
-    "handling an initial ping" should {
-
-      "record the location and return all locations in the DB" in {
-        dao.init(n17).futureValue shouldEqual Seq(s17, n17)
-      }
-    }
-
-    "handling a refresh ping" should {
-
-      "record the location and return all locations since last ping" in {
-        dao.db.run(insert(n17)).futureValue
-        dao.refresh(s17.time, n17).futureValue shouldEqual Seq(n17)
-      }
-    }
-
-    "hanlding a remove request" should {
+    "handling a remove request" should {
 
       "delete an existing resource" in {
         dao.remove(s17.id).futureValue shouldEqual 1

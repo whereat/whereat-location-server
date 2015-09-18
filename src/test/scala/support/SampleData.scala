@@ -125,6 +125,38 @@ object SampleData extends JsonProtocols {
       |  }
       |}""".stripMargin
 
+    val n17ReqWrongOrder =
+    """{
+      |  "lastPing": -1,
+      |  "location": {
+      |    "lat": 40.706877,
+      |    "id": "8d3f4369-e829-4ca5-8d9b-123264aeb469",
+      |    "lon": -74.0112654,
+      |    "time": 1510876800000
+      |  }
+      |}""".stripMargin
+
+    val n17ReqMissingField =
+    """{
+      |  "lastPing": -1,
+      |  "location": {
+      |    "lat": 40.706877,
+      |    "lon": -74.0112654,
+      |    "time": 1510876800000
+      |  }
+      |}""".stripMargin
+
+
+    val n17ReqTypeError =
+    """{
+      |  "lastPing": -1,
+      |  "location": {
+      |    "lat": "40.706877",
+      |    "lon": -74.0112654,
+      |    "time": 1510876800000
+      |  }
+      |}""".stripMargin
+
 
   val n17ReqRefreshLatest =
     """{

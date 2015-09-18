@@ -11,8 +11,11 @@ import scala.concurrent.duration._
  */
 
 trait Erasable {
-    def eraseHourly(system: ActorSystem, dao: LocationDaoImpl) : Cancellable = {
-      val eraseActor = system.actorOf(Props[EraseActor])
-      system.scheduler.schedule(0 millis, 1 hour, eraseActor, Erase(dao))
+
+    def scheduleErase(sys: ActorSystem, dao: LocationDaoImpl, dur: FiniteDuration) : Cancellable = {
+      implicit val executor = sys.dispatcher
+      val eraseActor = sys.actorOf(Props[EraseActor])
+      sys.scheduler.schedule(0 millis, dur, eraseActor, Erase(dao))
     }
+
 }

@@ -11,8 +11,8 @@ scalaVersion := "2.11.7"
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 libraryDependencies ++= {
-  val akkaStreamVersion = "1.0-RC4"
-  val akkaVersion = "2.3.12"
+  val akkaStreamVersion = "1.0"
+  val akkaVersion = "2.3.14"
   val h2Version = "1.4.187"
   val hikariCpVersion = "2.3.9"
   val scalaMockVersion = "3.2"

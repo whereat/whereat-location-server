@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Headers`, `Access
 import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
+import model.WrappedLocation
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import support.SampleData._
@@ -58,117 +59,97 @@ with BeforeAndAfterEach {
       }
     }
 
-    "receiving POST /locations/init" should {
+    "receiving POST /locations/update" when {
 
-      "respond to valid requests with list of all locations" in {
+      "request is well-formed" when {
 
-        fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
+        "it is user's initial location post" should {
 
-        Post("/locations/init", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
-          responseAs[String] shouldEqual s17n17JsonSeq
+          "respond to valid requests with list of all locations" in {
+
+            fakeDao.put _ expects WrappedLocation(-1L, n17) returning Future.successful(Seq(s17,n17)) once()
+
+            Post("/locations/update", HttpEntity(`application/json`, n17ReqInit)) ~> rte ~> check {
+              responseAs[String] shouldEqual n17ResponseInit
+            }
+          }
         }
-      }
 
-      "handle requests with incorrectly ordered fields" in {
+        "user has already posted" when {
 
-        fakeDao.init _ expects s17 returning Future.successful(Seq(s17, n17)) once()
+          "no users have posted since user's last post" should {
 
-        Post("/locations/init", HttpEntity(`application/json`, s17Json_wrongOrder)) ~> rte ~> check {
-          responseAs[String] shouldEqual s17n17JsonSeq
-        }
-      }
+            "return user's last location" in {
+              fakeDao.put _ expects WrappedLocation(n17.time, n17_) returning Future.successful(Seq(n17_)) once()
 
-      "reject requests with missing fields" in {
+              Post("/locations/update", HttpEntity(`application/json`, n17ReqRefreshLatest)) ~> rte ~> check {
+                responseAs[String] shouldEqual n17ResponseRefreshLatest
+              }
+            }
+          }
 
-        fakeDao.init _ expects * never()
+          "other users have posted since user's last post" should {
 
-        Post("/locations/init", HttpEntity(`application/json`, s17Json_missingField)) ~> rte ~> check {
+            "return all locations posted since user's last post" in {
 
-          rejection shouldBe a[MalformedRequestContentRejection]
-          rejection match {
-            case MalformedRequestContentRejection(msg, _) ⇒
-              msg shouldEqual "Object is missing required member 'time'"
+              fakeDao.put _ expects WrappedLocation(200L, n17_) returning Future.successful(Seq(s17,n17_)) once()
+
+              Post("/locations/update", HttpEntity(`application/json`, n17ReqRefreshNotLatest)) ~> rte ~> check {
+                responseAs[String] shouldEqual n17ResponseRefreshNotLatest
+              }
+            }
           }
         }
       }
 
-      "reject requests with type errors" in {
+      "request is not well-formed" should {
 
-        fakeDao.init _ expects * never()
+        "handle requests with incorrectly ordered fields" in {
 
-        Post("/locations/init", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
+          fakeDao.put _ expects WrappedLocation(-1L, n17) returning Future.successful(Seq(s17, n17)) once()
 
-          rejection shouldBe a[MalformedRequestContentRejection]
-          rejectMsg(rejection)shouldEqual """Expected Double as JsNumber, but got "40.7092529""""
+          Post("/locations/update", HttpEntity(`application/json`, n17ReqWrongOrder)) ~> rte ~> check {
+            responseAs[String] shouldEqual n17ResponseInit
+          }
+        }
+
+        "reject requests with missing fields" in {
+
+          fakeDao.put _ expects * never()
+
+          Post("/locations/update", HttpEntity(`application/json`, n17ReqMissingField)) ~> rte ~> check {
+
+            rejection shouldBe a[MalformedRequestContentRejection]
+            rejection match {
+              case MalformedRequestContentRejection(msg, _) ⇒
+                msg shouldEqual "Object is missing required member 'time'"
+            }
+          }
+        }
+
+        "reject requests with type errors" in {
+
+          fakeDao.put _ expects * never()
+
+          Post("/locations/update", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
+
+            rejection shouldBe a[MalformedRequestContentRejection]
+            rejectMsg(rejection)shouldEqual """Expected Double as JsNumber, but got "40.706877""""
+          }
         }
       }
 
       "reject requests with incorrectly formatted JSON" in {
 
-        fakeDao.init _ expects * never()
+        fakeDao.put _ expects * never()
 
-        Post("/locations/init", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
+        Post("/locations/update", HttpEntity(`application/json`, s17Json_badJson)) ~> rte ~> check {
 
           rejection shouldBe a[MalformedRequestContentRejection]
           rejectMsg(rejection) should include("Unexpected character")
-
         }
       }
     }
-
-    "receiving POST /locations/refresh" should {
-
-      "respond to valid requests with all locations received since last ping from requesting user" in {
-
-        fakeDao.refresh _ expects(s17, s17.time) returning Future.successful(Seq(n17)) once()
-
-        Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json)) ~> rte ~> check {
-          responseAs[String] shouldEqual n17JsonSeq
-        }
-      }
-
-      "reject requests that send Location JSON instead of WrappedLocation" in {
-
-        fakeDao.init _ expects * never()
-
-        Post("/locations/refresh", HttpEntity(`application/json`, s17Json)) ~> rte ~> check {
-          rejection shouldBe a[MalformedRequestContentRejection]
-          rejectMsg(rejection) should include ("Object is missing required member 'location'")
-        }
-      }
-
-      "reject requests that omit a `lastPing` field" in {
-
-        fakeDao.init _ expects * never()
-
-        Post("/locations/refresh", HttpEntity(`application/json`, wrappedS17Json_noLastPing)) ~> rte ~> check {
-          rejection shouldBe a[MalformedRequestContentRejection]
-          rejectMsg(rejection) should include ("Object is missing required member 'lastPing'")
-        }
-      }
-    }
-
-    "receiving POST /locations/remove" should {
-
-      "respond to request matching existing resource with notification of its deletion" in {
-
-        fakeDao.remove _ expects s17.id returning Future.successful(1)
-
-        Post("/locations/remove", HttpEntity(`application/json`, s17.id)) ~> rte ~> check {
-          responseAs[String] shouldEqual "1 record(s) deleted."
-        }
-      }
-
-      "respond to request matching non-existent resource with notification of no deletions" in {
-
-        fakeDao.remove _ expects "hi there!" returning Future.successful(0)
-
-        Post("/locations/remove", HttpEntity(`application/json`, "hi there!")) ~> rte ~> check {
-          responseAs[String] shouldEqual "0 record(s) deleted."
-        }
-      }
-    }
-
 
 
     "receiving POST /locations/erase" should {

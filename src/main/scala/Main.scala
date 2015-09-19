@@ -1,9 +1,13 @@
-import akka.actor.ActorSystem
+import actors.{EraseActor, Erasable}
+import akka.actor.{Props, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import routes.Routes
-import db.{LocationDaoImpl, LocationQueries, LocationDao}
 import cfg.Config
+import db.LocationDaoImpl
+import routes.Routes
+import scala.concurrent.duration._
+
+
 
 /**
  * Author: @aguestuser
@@ -11,15 +15,20 @@ import cfg.Config
  */
 
 
-object Main extends App with Config with Routes with LocationQueries {
+object Main extends App with Config with Routes with Erasable {
 
   override implicit val system = ActorSystem()
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
-  db.run(createSchema).map { _ ⇒
-    println("Database initialized")
+  val dao = LocationDaoImpl(db)
+  val eraseActor = system.actorOf(Props[EraseActor])
+
+  dao.build map { _ ⇒
+
     Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
     println(s"Server online at http://localhost:$httpPort")
+
+    scheduleErase(system, eraseActor, dao, 1 hour)
   }
 }

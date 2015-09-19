@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import db.LocationDao
-import model.{JsonProtocols, Location, WrappedLocation}
+import model._
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -30,40 +30,35 @@ trait Routes extends CorsSupport with JsonProtocols {
         }
       } ~
         pathPrefix("locations") {
-          path("init") {
+          path("update") {
             post {
-              entity(as[Location]) { loc ⇒
+              entity(as[WrappedLocation]) { wLoc ⇒
                 completeWith(instanceOf[Seq[Location]]) {
-                  completer ⇒ dao.init(loc) map completer
+                  completer ⇒ dao.put(wLoc) map completer
                 }
               }
             }
           } ~
-            path("refresh") {
-              post {
-                entity(as[WrappedLocation]) { case WrappedLocation(loc, lastPing) ⇒
-                  completeWith(instanceOf[Seq[Location]]) {
-                    completer ⇒ dao.refresh(loc, lastPing) map completer
-                  }
-                }
-              }
-            } ~
-            path("remove") {
-              post {
-                entity(as[String]) { id ⇒
-                  complete {
-                    dao.remove(id) map { n ⇒ s"$n record(s) deleted." }
-                  }
-                }
-              }
-            } ~
-            path("erase") {
-              post {
-                complete {
-                  dao.erase map { n ⇒ s"Database erased. $n record(s) deleted."}
+          path("remove") {
+            post {
+              entity(as[User]) { case User(id) ⇒
+                completeWith(instanceOf[Message]) {
+                  completer ⇒ dao.remove(id) map { n ⇒
+                    Message(s"$n record(s) deleted.")
+                  } map completer
                 }
               }
             }
+          } ~
+          path("erase") {
+            post {
+              completeWith(instanceOf[Message]) {
+                completer ⇒ dao.erase map { n ⇒
+                  Message(s"Database erased. $n record(s) deleted.")
+                } map completer
+              }
+            }
+          }
         }
     }
 }

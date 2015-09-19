@@ -8,7 +8,7 @@ import spray.json.DefaultJsonProtocol
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-case class WrappedLocation(location: Location, lastPing: Long)
+case class WrappedLocation(lastPing: Long, location: Location)
 
 object WrappedLocation
 

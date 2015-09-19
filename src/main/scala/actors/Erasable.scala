@@ -1,7 +1,8 @@
 package actors
 
-import akka.actor.{ActorSystem, Props, Cancellable}
-import db.LocationDaoImpl
+import akka.actor._
+import db.LocationDao
+
 import scala.concurrent.duration._
 
 /**
@@ -11,11 +12,8 @@ import scala.concurrent.duration._
  */
 
 trait Erasable {
-
-    def scheduleErase(sys: ActorSystem, dao: LocationDaoImpl, dur: FiniteDuration) : Cancellable = {
-      implicit val executor = sys.dispatcher
-      val eraseActor = sys.actorOf(Props[EraseActor])
-      sys.scheduler.schedule(0 millis, dur, eraseActor, Erase(dao))
+    def scheduleErase[D <: LocationDao](sys: ActorSystem, actor: ActorRef, dao: D, dur: FiniteDuration) : Cancellable = {
+      import sys.dispatcher
+      sys.scheduler.schedule(0 millis, dur, actor, Erase(dao))
     }
-
 }

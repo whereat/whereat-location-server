@@ -11,8 +11,17 @@ import db.LocationDao
 case class Erase[T <: LocationDao](dao: T)
 
 class EraseActor extends Actor {
+
+  implicit val ec = context.dispatcher
+
   def receive = {
-    case Erase(dao) ⇒ dao.erase
+
+    case Erase(dao) ⇒
+      dao.erase map { n ⇒
+        println(s"Database erased. $n records deleted.")
+        sender() ! n
+    }
+
   }
 }
 

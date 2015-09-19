@@ -1,5 +1,5 @@
-import actors.Erasable
-import akka.actor.ActorSystem
+import actors.{EraseActor, Erasable}
+import akka.actor.{Props, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import cfg.Config
@@ -15,22 +15,20 @@ import scala.concurrent.duration._
  */
 
 
-object Main
-  extends App
-  with Config
-  with Routes
-  with Erasable {
+object Main extends App with Config with Routes with Erasable {
 
   override implicit val system = ActorSystem()
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
+
   val dao = LocationDaoImpl(db)
+  val eraseActor = system.actorOf(Props[EraseActor])
 
   dao.build map { _ ⇒
 
     Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
     println(s"Server online at http://localhost:$httpPort")
 
-    scheduleErase(system, dao, 1 hour)
+    scheduleErase(system, eraseActor, dao, 1 hour)
   }
 }

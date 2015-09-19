@@ -1,5 +1,6 @@
 package db
 
+import model.WrappedLocation
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest._
@@ -11,15 +12,15 @@ import support.SampleData.{n17, s17}
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
-class LocationDaoSpec extends WordSpec
-with LocationQueries
-with Matchers
-with BeforeAndAfter
-with ScalaFutures {
+class LocationDaoSpec
+  extends WordSpec
+  with LocationQueries
+  with Matchers
+  with BeforeAndAfter
+  with ScalaFutures {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
   implicit val ec_ = scala.concurrent.ExecutionContext.global
-
   var dao: LocationDaoImpl = _
 
   before {
@@ -39,22 +40,37 @@ with ScalaFutures {
 
   "The Location DAO" when {
 
-    "handling an initial ping" should {
+    "handling a `put` request" when {
 
-      "record the location and return all locations in the DB" in {
-        dao.init(n17).futureValue shouldEqual Seq(s17, n17)
+      "it is a user's initial location post" should {
+
+        "insert the location and return all locations in the DB" in {
+          dao.put(WrappedLocation(lastPing = -1L, location = n17))
+            .futureValue shouldEqual Seq(s17, n17)
+        }
+      }
+
+      "the user has already posted a location" when {
+
+        "no users have posted since user's last post" should {
+
+          "update the user's location and return it" in {
+            dao.db.run(insert(n17)).futureValue
+            dao.put(WrappedLocation(s17.time,n17)).futureValue shouldEqual Seq(n17)
+          }
+        }
+
+        "other users have posted since user's last post" should {
+
+          "update the user's location and return all locations posted since user's last post" in {
+            dao.db.run(insert(n17)).futureValue
+            dao.put(WrappedLocation(-1L,n17)).futureValue shouldEqual Seq(s17,n17)
+          }
+        }
       }
     }
 
-    "handling a refresh ping" should {
-
-      "record the location and return all locations since last ping" in {
-        dao.db.run(insert(n17)).futureValue
-        dao.refresh(n17, s17.time).futureValue shouldEqual Seq(n17)
-      }
-    }
-
-    "hanlding a remove request" should {
+    "handling a remove request" should {
 
       "delete an existing resource" in {
         dao.remove(s17.id).futureValue shouldEqual 1

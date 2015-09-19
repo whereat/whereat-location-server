@@ -1,15 +1,12 @@
 package actors
 
 import akka.actor.ActorSystem
-import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout
 import db.LocationDao
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -17,30 +14,37 @@ import scala.concurrent.duration._
  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
  */
 
-class EraseActorSpec(_system: ActorSystem)
+class ErasableSpec(_system: ActorSystem)
   extends TestKit(_system)
+  with Erasable
   with ImplicitSender
   with WordSpecLike
   with Matchers
   with BeforeAndAfterAll
-  with MockFactory
-  with ScalaFutures {
+  with MockFactory {
 
-  implicit val timeout = Timeout(5 seconds)
   def this() = this(ActorSystem("EraseActorSpecSystem"))
   override def afterAll() = TestKit.shutdownActorSystem(system)
+
+  implicit val timeout = Timeout(5 seconds)
   val fakeDao = mock[LocationDao]
 
-  "EraseActor" should {
+  "Erasable" when {
 
-    "erase the database wrapped in an Erase message" in {
+    "#scheduleErase called" should {
 
-      fakeDao.erase _ expects() returning Future.successful(1)
-      val eraseActorRef = TestActorRef(new EraseActor)
+      "schedule periodic erasures of the DB" in {
 
-      val res = eraseActorRef ? Erase(fakeDao)
-      val res_ = res.futureValue
+        val interval = 200 milli
+        val offset = 10 milli
+        val eraseActorRef = TestActorRef(new EraseActor)
+
+        scheduleErase(system, testActor, fakeDao, interval)
+
+        expectMsg(interval, Erase(fakeDao))
+        expectMsgAllOf(2 * interval + offset, Erase(fakeDao), Erase(fakeDao))
+        expectMsgAllOf(3 * interval + offset, Erase(fakeDao), Erase(fakeDao), Erase(fakeDao))
+      }
     }
   }
 }
-

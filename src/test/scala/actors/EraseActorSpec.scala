@@ -39,7 +39,7 @@ class EraseActorSpec(_system: ActorSystem)
       val eraseActorRef = TestActorRef(new EraseActor)
 
       val res = eraseActorRef ? Erase(fakeDao)
-      val res_ = res.futureValue
+      res.futureValue shouldEqual 1
     }
   }
 }

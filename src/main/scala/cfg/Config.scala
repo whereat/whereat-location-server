@@ -18,4 +18,8 @@ trait Config {
   val httpPort = Properties.envOrElse("PORT", httpConfig.getString("port")).toInt
   val db = Database.forConfig("devDb")
   val allowedOrigin = config.getString("cors.allowed-origin")
+  val hpkpPinnedKey = sys.env("WHEREAT_PKP_PUBLIC_KEY")
+  val hpkpBackupKey = sys.env("WHEREAT_PKP_BACKUP_KEY")
+  val hpkpReportURI = sys.env("WHEREAT_PKP_REPORT_URI")
+  val hpkpMaxAge = sys.env("WHEREAT_PKP_MAX_AGE")
  }

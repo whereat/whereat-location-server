@@ -47,9 +47,6 @@ with BeforeAndAfterEach {
             Some(`Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With"))
         }
       }
-    }
-
-    "receiving any request" should {
       "respond with HPKP headers" in {
         Get("/hello") ~> rte ~> check(header("Public-Key-Pins") shouldEqual Some {
           RawHeader("Public-Key-Pins", s"""pin-sha256="$hpkpPinnedKey"; pin-sha256="$hpkpBackupKey"; includeSubdomains; report-uri="$hpkpReportURI";max-age=$hpkpMaxAge""")

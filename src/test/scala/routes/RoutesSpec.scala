@@ -2,7 +2,7 @@ package routes
 
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Credentials`, HttpOrigin, `Access-Control-Allow-Origin`}
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import db.LocationDao
@@ -49,6 +49,13 @@ with BeforeAndAfterEach {
       }
     }
 
+    "receiving any request" should {
+      "respond with HPKP headers" in {
+        Get("/hello") ~> rte ~> check(header("Public-Key-Pins") shouldEqual Some {
+          RawHeader("Public-Key-Pins", s"""pin-sha256="$hpkpPinnedKey"; pin-sha256="$hpkpBackupKey"; includeSubdomains; report-uri="$hpkpReportURI";max-age=$hpkpMaxAge""")
+        })
+      }
+    }
     "receiving GET /hello" should {
 
       "respond with 'hello world!" in {

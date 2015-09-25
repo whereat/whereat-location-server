@@ -40,11 +40,11 @@ with BeforeAndAfterEach {
 
         Get("/hello") ~> rte ~> check {
           header("Access-Control-Allow-Origin") shouldEqual
-            Some(`Access-Control-Allow-Origin`(HttpOrigin("http://whereat.io")))
+            Some(`Access-Control-Allow-Origin`(HttpOrigin("https://whereat.io")))
           header("Access-Control-Allow-Credentials") shouldEqual
             Some(`Access-Control-Allow-Credentials`(true))
           header("Access-Control-Allow-Headers") shouldEqual
-            Some(`Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With"))
+            Some(`Access-Control-Allow-Headers`("Accept, Authorization", "Content-Type", "Origin", "X-Requested-With"))
         }
       }
       "respond with HPKP headers" in {
@@ -126,7 +126,7 @@ with BeforeAndAfterEach {
             rejection shouldBe a[MalformedRequestContentRejection]
             rejection match {
               case MalformedRequestContentRejection(msg, _) ⇒
-                msg shouldEqual "Object is missing required member 'time'"
+                msg shouldEqual "Object is missing required member 'id'"
             }
           }
         }
@@ -138,7 +138,7 @@ with BeforeAndAfterEach {
           Post("/locations/update", HttpEntity(`application/json`, s17Json_typeError)) ~> rte ~> check {
 
             rejection shouldBe a[MalformedRequestContentRejection]
-            rejectMsg(rejection)shouldEqual """Expected Double as JsNumber, but got "40.706877""""
+            rejectMsg(rejection)shouldEqual """Object is missing required member 'lastPing'"""
           }
         }
       }
@@ -163,7 +163,12 @@ with BeforeAndAfterEach {
         fakeDao.erase _ expects() returning Future.successful(3)
 
         Post("/locations/erase") ~> rte ~> check {
-          responseAs[String] shouldEqual "Database erased. 3 record(s) deleted."
+          responseAs[String] shouldEqual {
+
+                """{
+              |  "msg": "Database erased. 3 record(s) deleted."
+                  |}""".stripMargin
+            }
         }
       }
     }

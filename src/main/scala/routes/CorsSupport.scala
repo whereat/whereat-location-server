@@ -24,8 +24,8 @@ trait CorsSupport extends Config {
 
   private def accessControlHeaders: Directive0 = {
     mapResponseHeaders { headers ⇒
-      `Access-Control-Allow-Origin`.`*` +:
-      `Access-Control-Allow-Credentials`(false) +:
+      `Access-Control-Allow-Origin`(allowed) +:
+      `Access-Control-Allow-Credentials`(true) +:
       `Access-Control-Allow-Headers`(
         "Accept, Authorization", "Content-Type", "Origin", "X-Requested-With") +:
       headers

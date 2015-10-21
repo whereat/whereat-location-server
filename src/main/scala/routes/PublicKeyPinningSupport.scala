@@ -13,9 +13,14 @@ trait PublicKeyPinningSupport extends Config {
     }
   }
   private def pkpHeader: RawHeader = {
+    def assemblePins(ps:String*):String = {
+      ps.foldLeft(""){
+        (acc,pin) => acc + s"""pin-sha256="$pin"; """
+      }
+    }
    RawHeader(
      "Public-Key-Pins",
-     s"""pin-sha256="$hpkpPinnedKey"; pin-sha256="$hpkpBackupKey"; includeSubdomains; report-uri="$hpkpReportURI";max-age=$hpkpMaxAge"""
+     assemblePins(hpkpPinnedKey,hpkpBackupKey) + s"""includeSubdomains; report-uri="$hpkpReportURI";max-age=$hpkpMaxAge"""
    )
   }
   private def publicKeyPinningHeader: Directive0 = {

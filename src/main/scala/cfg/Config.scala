@@ -20,6 +20,7 @@ trait Config {
   val allowedOrigin = config.getString("cors.allowed-origin")
   val hpkpPinnedKey = sys.env("WHEREAT_PKP_PUBLIC_KEY")
   val hpkpBackupKey = sys.env("WHEREAT_PKP_BACKUP_KEY")
+  val hpkpEmergencyKey = sys.env("WHEREAT_PKP_EMERGENCY_KEY")
   val hpkpReportURI = sys.env("WHEREAT_PKP_REPORT_URI")
   val hpkpMaxAge = sys.env("WHEREAT_PKP_MAX_AGE")
  }

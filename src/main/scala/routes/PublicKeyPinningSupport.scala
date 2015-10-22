@@ -20,7 +20,7 @@ trait PublicKeyPinningSupport extends Config {
     }
    RawHeader(
      "Public-Key-Pins",
-     assemblePins(hpkpPinnedKey,hpkpBackupKey) + s"""includeSubdomains; report-uri="$hpkpReportURI";max-age=$hpkpMaxAge"""
+     assemblePins(hpkpPinnedKey,hpkpBackupKey,hpkpEmergencyKey) + s"""includeSubdomains; report-uri="$hpkpReportURI";max-age=$hpkpMaxAge"""
    )
   }
   private def publicKeyPinningHeader: Directive0 = {

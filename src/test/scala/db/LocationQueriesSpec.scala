@@ -23,7 +23,7 @@ class LocationQueriesSpec
   var db: Database = _
 
   before {
-    db = Database.forConfig("testDb1")
+    db = Database.forConfig("db.test")
     db.run(createSchema).futureValue
   }
   after {
@@ -41,7 +41,7 @@ class LocationQueriesSpec
         } yield ts
       }.futureValue
 
-      tables.size shouldEqual 1
+      tables should not be empty
       tables.count(_.name.name == "LOCATIONS") shouldEqual 1
     }
 
@@ -54,10 +54,9 @@ class LocationQueriesSpec
         } yield ts
       }.futureValue
 
-      tables.size shouldEqual 0
       tables.count(_.name.name == "LOCATIONS") shouldEqual 0
 
-      db.run(createSchema).futureValue // to accomodate teardown
+      db.run(createSchema).futureValue // <- to accomodate teardown
     }
 
     "insert a location" in {

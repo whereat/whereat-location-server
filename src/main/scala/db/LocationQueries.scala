@@ -2,7 +2,7 @@ package db
 
 import model.Location
 import slick.lifted.TableQuery
-import slick.driver.H2Driver.api._
+import slick.driver.PostgresDriver.api._
 
 /**
  * Author: @aguestuser

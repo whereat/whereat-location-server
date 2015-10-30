@@ -7,7 +7,7 @@ import PostgresDriver.backend.DatabaseDef
 /**
  * Author: @aguestuser
  * Date: 10/28/15
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
+ * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
 trait Environment
@@ -17,8 +17,6 @@ case object Test extends Environment
 case object NullEnv extends Environment
 
 object Environment {
-
-  type Backend = slick.backend.DatabaseComponent
 
   def of(sVar: String): Environment = sVar match {
     case "PRODUCTION" ⇒ Prod
@@ -33,5 +31,4 @@ object Environment {
     case Test ⇒ Database.forConfig("db.test")
     case NullEnv ⇒ Database.forConfig("db.test")
   }
-
 }

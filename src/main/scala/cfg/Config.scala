@@ -1,7 +1,6 @@
 package cfg
 
 import com.typesafe.config.ConfigFactory
-import slick.driver.H2Driver.api.{Database ⇒ H2Database}
 import slick.driver.PostgresDriver.api.{Database ⇒ PGDatabase}
 
 import scala.util.Properties
@@ -17,11 +16,8 @@ trait Config {
   private val config = ConfigFactory.load()
   val env = Environment.of(sys.env("WHEREAT_ENVIRONMENT"))
 
-  // db configs
-  val db = env match {
-    case _ ⇒ H2Database.forConfig("localDb")
-    //case _ ⇒ PGDatabase.forURL(sys.env("JDBC_DATABASE_URL"))
-  }
+  // db config
+  val db = Environment.dbFor(env)
 
   // http configs
   private val httpConfig = config.getConfig("http")

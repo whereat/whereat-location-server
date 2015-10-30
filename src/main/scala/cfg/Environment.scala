@@ -5,8 +5,6 @@ import PostgresDriver.api.Database
 import PostgresDriver.backend.DatabaseDef
 
 /**
- * Author: @aguestuser
- * Date: 10/28/15
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 

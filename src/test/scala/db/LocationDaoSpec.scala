@@ -24,7 +24,7 @@ class LocationDaoSpec
   var dao: LocationDaoImpl = _
 
   before {
-    dao = LocationDaoImpl(Database.forConfig("testDb2"))
+    dao = LocationDaoImpl(Database.forConfig("db.test2"))
     dao.db.run {
       for {
         _ ← createSchema

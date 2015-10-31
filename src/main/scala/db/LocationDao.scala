@@ -2,6 +2,7 @@ package db
 
 import model.{WrappedLocation, Location}
 import slick.driver.H2Driver.api._
+import slick.jdbc.meta.MTable
 import scala.concurrent.Future
 
 /**
@@ -13,7 +14,15 @@ trait LocationDao extends LocationQueries {
 
   val db: Database
 
-  def build : Future[Unit] = db.run { createSchema }
+  def hasSchema : Future[Boolean] =
+    db.run { MTable.getTables } map { ts ⇒
+      ts.exists { _.name.name == "LOCATIONS" }
+    }
+
+  def build : Future[Boolean] = hasSchema flatMap { exists ⇒
+    if (!exists) db.run { createSchema } flatMap { _ ⇒ Future.successful(true) }
+    else Future.successful { false }
+  }
 
   def put(wl: WrappedLocation): Future[Seq[Location]] =
     db.run {

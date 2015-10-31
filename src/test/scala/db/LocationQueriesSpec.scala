@@ -35,11 +35,7 @@ class LocationQueriesSpec
 
     "create a schema" in {
 
-      val tables = db.run {
-        for {
-          ts ← MTable.getTables
-        } yield ts
-      }.futureValue
+      val tables = db.run { MTable.getTables }.futureValue
 
       tables should not be empty
       tables.count(_.name.name == "LOCATIONS") shouldEqual 1

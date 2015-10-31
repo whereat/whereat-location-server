@@ -40,6 +40,35 @@ class LocationDaoSpec
 
   "The Location DAO" when {
 
+    "app loading" when {
+
+      "a Locations schema doesn't exist" should {
+
+        "detect no schema" in {
+          dao.db.run(dropSchema).futureValue
+          dao.hasSchema.futureValue shouldEqual false
+
+          dao.db.run(createSchema).futureValue // <-- to accomodate teardown
+        }
+
+        "create a schema" in {
+          dao.db.run(dropSchema).futureValue
+          dao.build.futureValue shouldEqual true
+        }
+      }
+
+      "a Locations schema exists" should {
+
+        "detect a schema" in {
+          dao.hasSchema.futureValue shouldEqual true
+        }
+
+        "not create a schema" in {
+          dao.build.futureValue shouldEqual false
+        }
+      }
+    }
+
     "handling a `put` request" when {
 
       "it is a user's initial location post" should {

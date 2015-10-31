@@ -1,9 +1,8 @@
 package cfg
 
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
-import org.scalatest.{Inside, Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpecLike}
 import slick.jdbc.meta.MTable
 
 /**
@@ -12,8 +11,6 @@ import slick.jdbc.meta.MTable
 
 class EnvironmentSpec extends WordSpecLike
 with Matchers
-with MockFactory
-with Inside
 with ScalaFutures {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))

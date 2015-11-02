@@ -17,7 +17,6 @@ import support.SampleData._
 import scala.concurrent.Future
 
 /**
- * Author: @aguestuser
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
@@ -164,11 +163,10 @@ with BeforeAndAfterEach {
 
         Post("/locations/erase") ~> rte ~> check {
           responseAs[String] shouldEqual {
-
-                """{
-              |  "msg": "Database erased. 3 record(s) deleted."
-                  |}""".stripMargin
-            }
+          """{
+             |  "msg": "Database erased. 3 record(s) deleted."
+             |}""".stripMargin
+          }
         }
       }
     }

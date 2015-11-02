@@ -2,7 +2,8 @@ package db
 
 import model.Location
 import slick.lifted.Tag
-import slick.driver.H2Driver.api._
+//import slick.driver.H2Driver.api._
+import slick.driver.PostgresDriver.api._
 
 /**
  * Author: @aguestuser

@@ -8,7 +8,6 @@ import slick.jdbc.meta._
 import support.SampleData.{n17, s17, s17_}
 
 /**
- * Author: @aguestuser
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  */
 
@@ -23,7 +22,7 @@ class LocationQueriesSpec
   var db: Database = _
 
   before {
-    db = Database.forConfig("testDb1")
+    db = Database.forConfig("db.test")
     db.run(createSchema).futureValue
   }
   after {
@@ -31,17 +30,29 @@ class LocationQueriesSpec
     db.shutdown.futureValue
   }
 
+  /**
+   * NOTE: the tests in this bracket require the following
+   * environment variables to be defined in order to pass:
+   *
+   *   WHEREAT_DEV_DATABASE_URL
+   *   WHEREAT_PROD_DATABASE_URL
+   *   WHEREAT_TEST_DATABASE_URL_1
+   *   WHEREAT_TEST_DATABASE_URL_2
+   *
+   * The variables should refer to valide remote JDBC databases
+   * and must have the following query string appended to the URL:
+   *
+   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
+   */
+
   "The Locations SQL Interface" should {
+
 
     "create a schema" in {
 
-      val tables = db.run {
-        for {
-          ts ← MTable.getTables
-        } yield ts
-      }.futureValue
+      val tables = db.run { MTable.getTables }.futureValue
 
-      tables.size shouldEqual 1
+      tables should not be empty
       tables.count(_.name.name == "LOCATIONS") shouldEqual 1
     }
 
@@ -54,10 +65,9 @@ class LocationQueriesSpec
         } yield ts
       }.futureValue
 
-      tables.size shouldEqual 0
       tables.count(_.name.name == "LOCATIONS") shouldEqual 0
 
-      db.run(createSchema).futureValue // to accomodate teardown
+      db.run(createSchema).futureValue // <- to accomodate teardown
     }
 
     "insert a location" in {

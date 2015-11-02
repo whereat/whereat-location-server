@@ -8,8 +8,8 @@ import slick.driver.H2Driver.api._
 import support.SampleData.{n17, s17}
 
 /**
- * Author: @aguestuser
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
+ *
  */
 
 class LocationDaoSpec
@@ -38,9 +38,25 @@ class LocationDaoSpec
     dao.db.close()
   }
 
+  /**
+   * NOTE: the tests in this bracket require the following
+   * environment variables to be defined in order to pass:
+   *
+   *   WHEREAT_DEV_DATABASE_URL
+   *   WHEREAT_PROD_DATABASE_URL
+   *   WHEREAT_TEST_DATABASE_URL_1
+   *   WHEREAT_TEST_DATABASE_URL_2
+   *
+   * The variables should refer to valide remote JDBC databases
+   * and must have the following query string appended to the URL:
+   *
+   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
+   */
+
   "The Location DAO" when {
 
     "app loading" when {
+
 
       "a Locations schema doesn't exist" should {
 
@@ -108,7 +124,6 @@ class LocationDaoSpec
       "not delete a non-existent resource" in {
         dao.remove("hi_there!").futureValue shouldEqual 0
       }
-
     }
 
     "handling an erase request" should {

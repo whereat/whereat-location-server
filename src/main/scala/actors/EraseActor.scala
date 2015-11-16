@@ -1,5 +1,6 @@
 package actors
 
+import actors.EraseActor.Erase
 import akka.actor.Actor
 import db.LocationDao
 
@@ -8,7 +9,9 @@ import db.LocationDao
  * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
  */
 
-case class Erase[T <: LocationDao](dao: T)
+object EraseActor {
+  case class Erase[T <: LocationDao](dao: T)
+}
 
 class EraseActor extends Actor {
 
@@ -20,8 +23,7 @@ class EraseActor extends Actor {
       dao.erase map { n ⇒
         println(s"Database erased. $n records deleted.")
         sender() ! n
-    }
-
+      }
   }
 }
 

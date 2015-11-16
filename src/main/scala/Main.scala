@@ -1,4 +1,4 @@
-import actors.{EraseActor, Erasable}
+import actors.{ReadCacheSupervisor, EraseActor, Erasable}
 import akka.actor.{Props, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
@@ -21,7 +21,9 @@ object Main extends App with Config with Routes with Erasable {
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
-  val dao = LocationDaoImpl(db)
+  implicit val dao = LocationDaoImpl(db)
+  implicit val now = System.currentTimeMillis _
+
   val eraseActor = system.actorOf(Props[EraseActor])
 
   dao.build map { _ ⇒
@@ -30,5 +32,6 @@ object Main extends App with Config with Routes with Erasable {
     println(s"Server online at http://localhost:$httpPort")
 
     scheduleErase(system, eraseActor, dao, 1 hour)
+    system.actorOf(ReadCacheSupervisor.props(1), "ReadCacheSupervisor")
   }
 }

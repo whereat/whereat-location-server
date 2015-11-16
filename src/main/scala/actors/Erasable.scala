@@ -1,5 +1,6 @@
 package actors
 
+import actors.EraseActor.Erase
 import akka.actor._
 import db.LocationDao
 

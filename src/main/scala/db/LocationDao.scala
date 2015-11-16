@@ -32,6 +32,9 @@ trait LocationDao extends LocationQueries {
       } yield ls
     }
 
+  def getSince(t: Long): Future[Seq[Location]] =
+    db.run(allSince(t).result)
+
   def remove(id: String): Future[Int] = db.run { delete(id) }
 
   def erase: Future[Int] = db.run { clear }

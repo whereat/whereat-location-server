@@ -121,7 +121,7 @@ class LocationQueriesSpec
       val locs = db.run {
         for {
           _ ← insertMany(Seq(s17, n17))
-          ls ← allSince(s17.time).result
+          ls ← allSince(s17.time + 1L).result
         } yield ls
       }.futureValue
 
@@ -129,6 +129,22 @@ class LocationQueriesSpec
       locs shouldEqual Seq(n17)
 
     }
+
+    "retrieve all locations since a given time (inclusive)" in {
+
+      val locs = db.run {
+        for {
+          _ ← insertMany(Seq(s17, n17))
+          ls ← allSince(s17.time).result
+        } yield ls
+      }.futureValue
+
+      db.run(locations.size.result).futureValue shouldEqual 2
+      locs shouldEqual Seq(s17, n17)
+
+    }
+
+
 
     "update a location" in {
 

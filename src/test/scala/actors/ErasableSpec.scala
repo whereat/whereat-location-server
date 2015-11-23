@@ -1,5 +1,6 @@
 package actors
 
+import actors.EraseActor.Erase
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout

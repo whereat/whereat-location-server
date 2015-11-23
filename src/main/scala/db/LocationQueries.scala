@@ -22,7 +22,7 @@ trait LocationQueries {
   val insertMany = { ls: Seq[Location] ⇒ locations ++= ls }
 
   val fetch = { id: String ⇒ locations.filter(_.id === id) }
-  val allSince = { t: Long ⇒ locations.filter(_.time > t) }
+  val allSince = { t: Long ⇒ locations.filter(_.time >= t) }
 
   val update = { (id: String, l: Location) ⇒ fetch(id).update(l) }
 

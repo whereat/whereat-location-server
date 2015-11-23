@@ -1,4 +1,4 @@
-import actors.{ReadCacheSupervisor, EraseActor, Erasable}
+import actors.{ReadCache5Sec, ReadCacheSupervisor, EraseActor, Erasable}
 import akka.actor.{Props, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
@@ -32,6 +32,6 @@ object Main extends App with Config with Routes with Erasable {
     println(s"Server online at http://localhost:$httpPort")
 
     scheduleErase(system, eraseActor, dao, 1 hour)
-    system.actorOf(ReadCacheSupervisor.props(1), "ReadCacheSupervisor")
+    system.actorOf(ReadCacheSupervisor.props(1, List(ReadCache5Sec)), "ReadCacheSupervisor")
   }
 }

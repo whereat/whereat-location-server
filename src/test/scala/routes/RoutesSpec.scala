@@ -39,7 +39,7 @@ with BeforeAndAfterEach {
 
         Get("/hello") ~> rte ~> check {
           header("Access-Control-Allow-Origin") shouldEqual
-            Some(`Access-Control-Allow-Origin`(HttpOrigin("https://whereat.io")))
+            Some(`Access-Control-Allow-Origin`(HttpOrigin("https://demo.whereat.io")))
           header("Access-Control-Allow-Credentials") shouldEqual
             Some(`Access-Control-Allow-Credentials`(true))
           header("Access-Control-Allow-Headers") shouldEqual

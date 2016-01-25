@@ -24,10 +24,20 @@ import org.scalatest._
 import slick.driver.H2Driver.api._
 import support.SampleData.{n17, s17}
 
-/**
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- *
- */
+  /**
+   * NOTE: the tests in this bracket require the following
+   * environment variables to be defined in order to pass:
+   *
+   *   WHEREAT_DEV_DATABASE_URL
+   *   WHEREAT_PROD_DATABASE_URL
+   *   WHEREAT_TEST_DATABASE_URL_1
+   *   WHEREAT_TEST_DATABASE_URL_2
+   *
+   * The variables should refer to valide remote JDBC databases
+   * and must have the following query string appended to the URL:
+   *
+   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
+   */
 
 class LocationDaoSpec
   extends WordSpec
@@ -54,21 +64,6 @@ class LocationDaoSpec
     dao.db.run(dropSchema).futureValue
     dao.db.close()
   }
-
-  /**
-   * NOTE: the tests in this bracket require the following
-   * environment variables to be defined in order to pass:
-   *
-   *   WHEREAT_DEV_DATABASE_URL
-   *   WHEREAT_PROD_DATABASE_URL
-   *   WHEREAT_TEST_DATABASE_URL_1
-   *   WHEREAT_TEST_DATABASE_URL_2
-   *
-   * The variables should refer to valide remote JDBC databases
-   * and must have the following query string appended to the URL:
-   *
-   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
-   */
 
   "The Location DAO" when {
 

@@ -8,7 +8,9 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+
+scalacOptions ++= Seq("-Xmax-classfile-name", "128")
 
 libraryDependencies ++= {
   val akkaStreamVersion = "1.0"

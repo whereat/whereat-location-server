@@ -1,3 +1,20 @@
+/**
+ *
+ * Copyright (c) 2015-present, Total Location Test Paragraph.
+ * All rights reserved.
+ *
+ * This file is part of Where@. Where@ is free software:
+ * you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License (GPL), either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * Where@ is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. For more details,
+ * see the full license at <http://www.gnu.org/licenses/gpl-3.0.en.html>
+ *
+ */
+
 package db
 
 import model.WrappedLocation
@@ -7,10 +24,20 @@ import org.scalatest._
 import slick.driver.H2Driver.api._
 import support.SampleData.{n17, s17}
 
-/**
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- *
- */
+  /**
+   * NOTE: the tests in this bracket require the following
+   * environment variables to be defined in order to pass:
+   *
+   *   WHEREAT_DEV_DATABASE_URL
+   *   WHEREAT_PROD_DATABASE_URL
+   *   WHEREAT_TEST_DATABASE_URL_1
+   *   WHEREAT_TEST_DATABASE_URL_2
+   *
+   * The variables should refer to valide remote JDBC databases
+   * and must have the following query string appended to the URL:
+   *
+   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
+   */
 
 class LocationDaoSpec
   extends WordSpec
@@ -37,21 +64,6 @@ class LocationDaoSpec
     dao.db.run(dropSchema).futureValue
     dao.db.close()
   }
-
-  /**
-   * NOTE: the tests in this bracket require the following
-   * environment variables to be defined in order to pass:
-   *
-   *   WHEREAT_DEV_DATABASE_URL
-   *   WHEREAT_PROD_DATABASE_URL
-   *   WHEREAT_TEST_DATABASE_URL_1
-   *   WHEREAT_TEST_DATABASE_URL_2
-   *
-   * The variables should refer to valide remote JDBC databases
-   * and must have the following query string appended to the URL:
-   *
-   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
-   */
 
   "The Location DAO" when {
 

@@ -10,8 +10,6 @@ scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
-scalacOptions ++= Seq("-Xmax-classfile-name", "128")
-
 scalacOptions ++= Seq("-Xmax-classfile-name", "254")
 
 libraryDependencies ++= {

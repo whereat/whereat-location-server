@@ -1,0 +1,22 @@
+---
+-
+  hosts: "127.0.0.1"
+  roles:
+    -
+      role: azavea.scala
+      java_flavor: oracle
+      java_oracle_accept_license_agreement: true
+      java_major_version: "8"
+      java_version: 8u72+8u71arm-1~webupd8~0
+      scala_sbt_version: "0.13.8"
+      scala_version: "2.11.7"
+  tasks:
+    -
+      apt: "pkg=$item force=yes update_cache=yes"
+      name: "Install dependencies"
+      with_items:
+        - git
+    -
+      git: "repo=https://github.com/whereat/whereat-location-server.git dest=/whereat-location-server accept_hostkey=True"
+      name: "Checkout code"
+  user: root

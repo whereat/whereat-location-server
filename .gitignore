@@ -29,3 +29,5 @@ project/boot
 .project
 .settings
 *.log
+
+.env

@@ -1,0 +1,40 @@
+{
+  "builders": [
+    {
+      "type": "docker",
+      "image": "ubuntu:14.04",
+      "commit": true
+    }
+  ],
+  "provisioners":[
+    {
+      "type": "shell",
+      "inline": [
+        "apt-get install software-properties-common -y",
+        "apt-add-repository ppa:ansible/ansible",
+        "apt-get update",
+        "apt-get install ansible -y",
+        "ansible-galaxy install azavea.java",
+        "ansible-galaxy install azavea.scala"
+      ]
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "playbook.yml"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "cd /whereat-location-server",
+        "sbt compile"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "docker-tag",
+      "repository": "whereat/whereat-location-server",
+      "tag": "latest"
+    }
+  ]
+}

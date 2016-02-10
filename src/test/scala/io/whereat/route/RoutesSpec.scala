@@ -23,10 +23,11 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import io.whereat.db.LocationDao
-import io.whereat.model.WrappedLocation
+import io.whereat.model.{JsonProtocols, WrappedLocation, Location}
 import io.whereat.support.SampleData._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import spray.json._
 
 //import org.scalamock.scalatest.proxy.MockFactory
 
@@ -42,7 +43,8 @@ with Matchers
 with MockFactory
 with ScalatestRouteTest
 with Routes
-with BeforeAndAfterEach {
+with BeforeAndAfterEach
+with JsonProtocols {
 
   val fakeDao = mock[LocationDao]
   val rte = route(fakeDao)
@@ -189,16 +191,24 @@ with BeforeAndAfterEach {
     }
 
     "receiving GET /locations/websocket" should {
+      val wsClient: WSProbe = WSProbe()
+
       "establish a websocket connection" in {
 
-        val wsProbe: WSProbe = WSProbe()
-        WS("/locations/websocket", wsProbe.flow) ~> rte ~> check {
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
           isWebsocketUpgrade shouldEqual true
         }
       }
 
-      "deserialize valid JSON locations" in {
+      "echo location back" in {
 
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          val location: Location = Location("id", 10.0, 20.0, 5000L)
+          val serializedLocation: String = location.toJson.toString
+
+          wsClient.sendMessage(serializedLocation)
+          wsClient.expectMessage(serializedLocation)
+        }
       }
 
       "report error on invalid location JSON" in {

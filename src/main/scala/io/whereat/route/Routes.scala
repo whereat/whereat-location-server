@@ -24,6 +24,7 @@ import akka.stream.Materializer
 import io.whereat.db.LocationDao
 import io.whereat.model._
 import akka.stream.scaladsl.{Source, Sink, Flow}
+import akka.stream.scaladsl.Flow
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -76,7 +77,7 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
           } ~
           path("websocket") {
             get {
-              handleWebsocketMessages(Flow.fromSinkAndSource(Sink.ignore, Source.empty))
+              handleWebsocketMessages(Flow[akka.http.scaladsl.model.ws.Message])
             }
           }
         }

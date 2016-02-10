@@ -42,6 +42,7 @@ libraryDependencies ++= {
 
     "org.scalamock"       %% "scalamock-scalatest-support"        % scalaMockVersion % "test",
     "org.scalatest"       %% "scalatest"                          % scalaTestVersion % "test",
-    "com.typesafe.akka"   %% "akka-testkit"                       % akkaVersion % "test"
+    "com.typesafe.akka"   %% "akka-testkit"                       % akkaVersion % "test",
+    "org.glassfish.tyrus.bundles" % "tyrus-standalone-client" % "1.12" % "test"
   )
 }

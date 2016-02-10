@@ -23,6 +23,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import io.whereat.db.LocationDao
 import io.whereat.model._
+import akka.stream.scaladsl.{Source, Sink, Flow}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -71,6 +72,11 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
                   Message(s"Database erased. $n record(s) deleted.")
                 } map completer
               }
+            }
+          } ~
+          path("websocket") {
+            get {
+              handleWebsocketMessages(Flow.fromSinkAndSource(Sink.ignore, Source.empty))
             }
           }
         }

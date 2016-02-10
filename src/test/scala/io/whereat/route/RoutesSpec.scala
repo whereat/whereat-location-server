@@ -20,13 +20,13 @@ package io.whereat.route
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
+import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import io.whereat.db.LocationDao
 import io.whereat.model.WrappedLocation
+import io.whereat.support.SampleData._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import io.whereat.support.SampleData._
 
 //import org.scalamock.scalatest.proxy.MockFactory
 
@@ -185,6 +185,24 @@ with BeforeAndAfterEach {
              |}""".stripMargin
           }
         }
+      }
+    }
+
+    "receiving GET /locations/websocket" should {
+      "establish a websocket connection" in {
+
+        val wsProbe: WSProbe = WSProbe()
+        WS("/locations/websocket", wsProbe.flow) ~> rte ~> check {
+          isWebsocketUpgrade shouldEqual true
+        }
+      }
+
+      "deserialize valid JSON locations" in {
+
+      }
+
+      "report error on invalid location JSON" in {
+
       }
     }
   }

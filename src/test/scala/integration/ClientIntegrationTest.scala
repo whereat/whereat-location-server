@@ -3,8 +3,8 @@ package integration
 import java.net.URI
 
 import integration.support.{TestConfig, TestWebClient}
-import main.MainTrait
-import model.{LocationJsonProtocol, Location}
+import io.whereat.MainTrait
+import io.whereat.model.{LocationJsonProtocol, Location}
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.{Matchers, ShouldMatchers, WordSpec}

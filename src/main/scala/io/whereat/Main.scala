@@ -17,29 +17,38 @@ package io.whereat
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import io.whereat.actor.{Erasable, EraseActor}
 import io.whereat.config.Config
 import io.whereat.db.LocationDaoImpl
 import io.whereat.route.Routes
 
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 
-object Main extends App with Config with Routes with Erasable {
+trait MainTrait extends Routes with Erasable {
+  implicit val system: ActorSystem = ActorSystem()
 
-  override implicit val system = ActorSystem()
-  override implicit val executor = system.dispatcher
-  override implicit val materializer = ActorMaterializer()
+  implicit def executor: ExecutionContextExecutor = system.dispatcher
+
+  implicit val materializer: Materializer = ActorMaterializer()
 
   val dao = LocationDaoImpl(db)
   val eraseActor = system.actorOf(Props[EraseActor])
 
-  dao.build map { _ ⇒
+  def run: Future[Unit] = {
 
-    Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
-    println(s"Server online at http://localhost:$httpPort")
+    dao.build map { _ ⇒
 
-    scheduleErase(system, eraseActor, dao, 1 hour)
+      Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
+      println(s"Server online at http://localhost:$httpPort")
+
+      scheduleErase(system, eraseActor, dao, 1 hour)
+    }
   }
+}
+
+object Main extends App with Config with MainTrait {
+  run
 }

@@ -86,7 +86,7 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
                   val maybeLocation: Try[Location] = Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[Location])
                   maybeLocation match {
                     case Success(location) => incomingMessage
-                    case Failure(exception) => TextMessage.Strict(Map("error" -> "Invalid location").toJson.toString)
+                    case Failure(exception) => TextMessage.Strict(Error("Invalid location").toJson.toString)
                   }
                 }
               )

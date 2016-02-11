@@ -1,8 +1,8 @@
-package integration
+package io.whereat.integration
 
 import java.net.URI
 
-import integration.support.{TestConfig, TestWebClient}
+import io.whereat.integration.support.{TestConfig, TestWebClient}
 import io.whereat.MainTrait
 import io.whereat.model.{LocationJsonProtocol, Location}
 import org.scalatest.concurrent.Eventually.eventually

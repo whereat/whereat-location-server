@@ -1,4 +1,4 @@
-package integration.support
+package io.whereat.integration.support
 
 import java.net.ServerSocket
 

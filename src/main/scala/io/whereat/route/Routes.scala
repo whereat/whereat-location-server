@@ -18,15 +18,19 @@
 package io.whereat.route
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.ws
+import akka.http.scaladsl.model.ws.TextMessage
+import akka.http.scaladsl.model.ws.TextMessage.Strict
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import akka.stream.scaladsl.Flow
 import io.whereat.db.LocationDao
 import io.whereat.model._
-import akka.stream.scaladsl.{Source, Sink, Flow}
-import akka.stream.scaladsl.Flow
+import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
+import scala.util.{Failure, Success, Try}
 
 
 trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols {
@@ -77,7 +81,16 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
           } ~
           path("websocket") {
             get {
-              handleWebsocketMessages(Flow[akka.http.scaladsl.model.ws.Message])
+              val flow: Flow[ws.Message, ws.Message, Unit] = Flow[ws.Message].map(
+                incomingMessage => {
+                  val maybeLocation: Try[Location] = Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[Location])
+                  maybeLocation match {
+                    case Success(location) => incomingMessage
+                    case Failure(exception) => TextMessage.Strict(Map("error" -> "Invalid location").toJson.toString)
+                  }
+                }
+              )
+              handleWebsocketMessages(flow)
             }
           }
         }

@@ -23,14 +23,11 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import io.whereat.db.LocationDao
-import io.whereat.model.{JsonProtocols, WrappedLocation, Location}
+import io.whereat.model.{JsonProtocols, Location, WrappedLocation}
 import io.whereat.support.SampleData._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import spray.json._
-
-//import org.scalamock.scalatest.proxy.MockFactory
-
 
 import scala.concurrent.Future
 
@@ -49,6 +46,11 @@ with JsonProtocols {
   val fakeDao = mock[LocationDao]
   val rte = route(fakeDao)
   val rejectMsg = { r:Rejection ⇒ r match { case MalformedRequestContentRejection(msg,_) ⇒ msg } }
+  var wsClient: WSProbe = _
+
+  override def beforeEach: Unit = {
+    wsClient = WSProbe()
+  }
 
   "The API service" when {
 
@@ -191,7 +193,6 @@ with JsonProtocols {
     }
 
     "receiving GET /locations/websocket" should {
-      val wsClient: WSProbe = WSProbe()
 
       "establish a websocket connection" in {
 
@@ -211,8 +212,25 @@ with JsonProtocols {
         }
       }
 
+      "report error on invalid JSON" in {
+
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          val invalidJson: String = "Invalid JSON"
+
+          wsClient.sendMessage(invalidJson)
+          wsClient.expectMessage("{\"error\":\"Invalid location\"}")
+        }
+      }
+
       "report error on invalid location JSON" in {
 
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          val validNonLocationJson: String = Seq("Test").toJson.toString
+
+          wsClient.sendMessage(validNonLocationJson)
+
+          wsClient.expectMessage("{\"error\":\"Invalid location\"}")
+        }
       }
     }
   }

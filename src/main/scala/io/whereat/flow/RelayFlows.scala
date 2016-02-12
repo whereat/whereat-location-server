@@ -1,18 +1,37 @@
 package io.whereat.flow
 
 import akka.http.scaladsl.model.ws
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.model.ws.TextMessage.Strict
-import akka.stream.{FlowShape, Graph}
-import akka.stream.scaladsl.{BidiFlow, GraphDSL, Flow}
-import io.whereat.model.{JsonProtocols, Error, Location}
+import akka.stream.BidiShape
+import akka.stream.scaladsl._
+import io.whereat.model.{Error, JsonProtocols, Location}
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
 
 object RelayFlows extends JsonProtocols {
-  val errorHandlingFlow: BidiFlow[Try[Location], Location, Location, Message, Unit] =
-    BidiFlow.fromFlows(Flow[Try[Location]].map(_.get), Flow[Location].map(_ => TextMessage.Strict("Not what you want")))
+  val errorHandlingFlow: BidiFlow[Try[Location], Location, Location, Either[Error, Location], Unit] =
+    BidiFlow.fromGraph(GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+      val in1 = b.add(Broadcast[Try[Location]](2))
+      val successFlow = b.add(Flow[Try[Location]].collect {
+        case Success(location) => location
+      })
+      val failureFlow = b.add(Flow[Try[Location]].collect {
+        case Failure(_) => Left(Error("Invalid location"))
+      })
+      val in2 = b.add(Flow[Location].map(location => Right(location)))
+      val out2 = b.add(Merge[Either[Error, Location]](2))
+      val out1 = b.add(Flow[Location])
+
+      in1 ~> successFlow ~> out1
+      in1 ~> failureFlow
+      out2 <~ failureFlow
+      out2 <~ in2
+
+      BidiShape(in1.in, out1.out, in2.in, out2.out)
+    })
 
   val workingFlow = Flow[ws.Message].map(
     incomingMessage => {

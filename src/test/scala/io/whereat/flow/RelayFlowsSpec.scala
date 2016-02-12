@@ -1,23 +1,21 @@
 package io.whereat.flow
 
-import _root_.io.whereat.model.{Location, JsonProtocols}
+import io.whereat.model.{Error, JsonProtocols, Location}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.stream._
 import akka.stream.scaladsl.{Keep, _}
 import akka.stream.testkit.TestPublisher.Probe
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.{TestSink, TestSource}
-import akka.stream._
 import org.scalatest.{ShouldMatchers, WordSpec}
 import spray.json._
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{duration, Await, Future}
 import scala.util.{Failure, Success, Try}
 
 class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
   implicit val actorSystem = ActorSystem()
-  implicit val materizliaer = ActorMaterializer()
+  implicit val materializer = ActorMaterializer()
 
   "The deserialization flow" should {
     "return a Success(location) on valid location JSON" in {
@@ -64,7 +62,7 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
     "pass valid locations on to the next step" in {
       val pluggedFlow: Graph[FlowShape[Try[Location], Location], Unit] = GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
-        val handlingFlow: BidiShape[Try[Location], Location, Location, Message] = b.add(RelayFlows.errorHandlingFlow)
+        val handlingFlow: BidiShape[Try[Location], Location, Location, Either[Error, Location]] = b.add(RelayFlows.errorHandlingFlow)
 
         Source.empty[Location] ~> handlingFlow.in2
         handlingFlow.out2 ~> Sink.ignore
@@ -86,10 +84,51 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
     }
 
     "pass error messages back to the websocket" in {
+      val pluggedFlow: Graph[FlowShape[Try[Location], Either[Error, Location]], Unit] = GraphDSL.create() { implicit b =>
+        import GraphDSL.Implicits._
+        val handlingFlow: BidiShape[Try[Location], Location, Location, Either[Error, Location]] = b.add(RelayFlows.errorHandlingFlow)
 
+        Source.empty[Location] ~> handlingFlow.in2
+        handlingFlow.out1 ~> Sink.ignore
+
+        FlowShape(handlingFlow.in1, handlingFlow.out2)
+      }
+
+      val location: Location = Location(id = "id", lat = 10L, lon = -10L, time = 20)
+
+      val (publisher: Probe[Try[Location]], subscriber: TestSubscriber.Probe[Either[Error, Location]]) = TestSource.probe[Try[Location]]
+        .via(pluggedFlow)
+        .toMat(TestSink.probe[Either[Error, Location]])(Keep.both)
+        .run()
+      subscriber.request(1)
+
+      publisher.sendNext(Failure(new RuntimeException))
+
+      subscriber.expectNext(Left(Error("Invalid location")))
     }
 
     "pass locations coming from the dispatcher to the websocket" in {
+      val pluggedFlow = GraphDSL.create() { implicit b =>
+        import GraphDSL.Implicits._
+        val handlingFlow: BidiShape[Try[Location], Location, Location, Either[Error, Location]] = b.add(RelayFlows.errorHandlingFlow)
+
+        Source.empty[Try[Location]] ~> handlingFlow.in1
+        handlingFlow.out1 ~> Sink.ignore
+
+        FlowShape(handlingFlow.in2, handlingFlow.out2)
+      }
+
+      val location: Location = Location(id = "id", lat = 10L, lon = -10L, time = 20)
+
+      val (publisher: Probe[Location], subscriber: TestSubscriber.Probe[Either[Error, Location]]) = TestSource.probe[Location]
+        .via(pluggedFlow)
+        .toMat(TestSink.probe[Either[Error, Location]])(Keep.both)
+        .run()
+      subscriber.request(1)
+
+      publisher.sendNext(location)
+
+      subscriber.expectNext(Right(location))
     }
   }
 }

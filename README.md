@@ -6,3 +6,7 @@ Where@ is a secure location-sharing app that helps users locate a crowd of peopl
 To learn more about the project, visit <https://whereat.io>.
 
 To see the rest of our source code, visit <https://github.com/whereat>.
+
+## To install a Docker Container for the Location Server
+
+Please consult the [corresponding section](https://github.com/whereat/whereat-bash#to-install-a-docker-container-for-the-location-server) in the [Whereat Bash Wiki.](https://github.com/whereat/whereat-bash)

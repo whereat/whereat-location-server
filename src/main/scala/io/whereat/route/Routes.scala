@@ -21,7 +21,8 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
-import io.whereat.flow.RelayFlows
+import akka.stream.scaladsl.Flow
+import io.whereat.flow.RelayFlows._
 import io.whereat.db.LocationDao
 import io.whereat.model._
 
@@ -76,7 +77,11 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
           } ~
           path("websocket") {
             get {
-              handleWebsocketMessages(RelayFlows.workingFlow)
+              handleWebsocketMessages(
+                deserializationFlow
+                  .via(errorHandlingFlow.join(Flow[Location]))
+                  .via(serializationFlow)
+              )
             }
           }
         }

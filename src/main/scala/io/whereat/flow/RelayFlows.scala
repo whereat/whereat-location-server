@@ -33,16 +33,6 @@ object RelayFlows extends JsonProtocols {
       BidiShape(in1.in, out1.out, in2.in, out2.out)
     })
 
-  val workingFlow = Flow[ws.Message].map(
-    incomingMessage => {
-      val maybeLocation: Try[Location] = Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[Location])
-      maybeLocation match {
-        case Success(location) => incomingMessage
-        case Failure(exception) => TextMessage.Strict(Error("Invalid location").toJson.toString)
-      }
-    }
-  )
-
   val deserializationFlow = Flow[ws.Message].map(
     incomingMessage =>
       Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[Location])

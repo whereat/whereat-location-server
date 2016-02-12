@@ -47,4 +47,9 @@ object RelayFlows extends JsonProtocols {
     incomingMessage =>
       Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[Location])
   )
+
+  val serializationFlow = Flow[Either[Error, Location]].map {
+    case Left(error) => TextMessage.Strict(error.toJson.toString)
+    case Right(location) => TextMessage.Strict(location.toJson.toString)
+  }
 }

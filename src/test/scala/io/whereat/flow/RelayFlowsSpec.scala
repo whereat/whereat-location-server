@@ -1,8 +1,8 @@
 package io.whereat.flow
 
-import io.whereat.model.{Error, JsonProtocols, Location}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import io.whereat.model.{Error, JsonProtocols, Location}
 import akka.stream._
 import akka.stream.scaladsl.{Keep, _}
 import akka.stream.testkit.TestPublisher.Probe
@@ -129,6 +129,34 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
       publisher.sendNext(location)
 
       subscriber.expectNext(Right(location))
+    }
+  }
+
+  "The serialization flow" should {
+    "serialize a location" in {
+      val (pub: Probe[Either[Error, Location]], sub: TestSubscriber.Probe[Message]) = TestSource.probe[Either[Error, Location]]
+        .via(RelayFlows.serializationFlow)
+        .toMat(TestSink.probe[Message])(Keep.both)
+        .run()
+
+      val location = Location(id="42", lat=7, lon=9, time=33333)
+
+      sub.request(1)
+      pub.sendNext(Right(location))
+      sub.expectNext(TextMessage.Strict(location.toJson.toString))
+    }
+
+    "serialize an Error" in {
+      val (pub: Probe[Either[Error, Location]], sub: TestSubscriber.Probe[Message]) = TestSource.probe[Either[Error, Location]]
+        .via(RelayFlows.serializationFlow)
+        .toMat(TestSink.probe[Message])(Keep.both)
+        .run()
+
+      val error = Error("Invalid location")
+
+      sub.request(1)
+      pub.sendNext(Left(error))
+      sub.expectNext(TextMessage.Strict(error.toJson.toString))
     }
   }
 }

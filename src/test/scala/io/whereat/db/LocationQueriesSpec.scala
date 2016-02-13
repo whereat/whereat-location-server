@@ -18,11 +18,13 @@
 package io.whereat.db
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 import slick.driver.H2Driver.api._
 import slick.jdbc.meta._
 import io.whereat.support.SampleData.{n17, s17, s17_}
+
+import scala.concurrent.Future
 
 /**
  * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
@@ -35,35 +37,26 @@ class LocationQueriesSpec
   with BeforeAndAfter
   with ScalaFutures {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
+  implicit override val patienceConfig = PatienceConfig(
+    timeout = Span(10, Seconds),
+    interval = Span(100, Millis))
   var db: Database = _
 
   before {
     db = Database.forConfig("db.test")
-    db.run(createSchema).futureValue
+    db.run(MTable.getTables)
+      .map(_.exists(_.name.name == "LOCATIONS"))
+      .flatMap(exists ⇒
+          if(!exists) db.run(createSchema)
+          else Future.successful(())
+      ).futureValue
   }
   after {
     db.run(dropSchema).futureValue
     db.shutdown.futureValue
   }
 
-  /**
-   * NOTE: the tests in this bracket require the following
-   * environment variables to be defined in order to pass:
-   *
-   *   WHEREAT_DEV_DATABASE_URL
-   *   WHEREAT_PROD_DATABASE_URL
-   *   WHEREAT_TEST_DATABASE_URL_1
-   *   WHEREAT_TEST_DATABASE_URL_2
-   *
-   * The variables should refer to valide remote JDBC databases
-   * and must have the following query string appended to the URL:
-   *
-   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
-   */
-
   "The Locations SQL Interface" should {
-
 
     "create a schema" in {
 

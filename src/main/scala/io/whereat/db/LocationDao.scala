@@ -28,9 +28,7 @@ trait LocationDao extends LocationQueries {
   val db: Database
 
   def hasSchema : Future[Boolean] =
-    db.run { MTable.getTables } map { ts ⇒
-      ts.exists { _.name.name == "LOCATIONS" }
-    }
+    db.run { MTable.getTables } map { _.exists(_.name.name == "LOCATIONS") }
 
   def build : Future[Boolean] = hasSchema flatMap { exists ⇒
     if (!exists) db.run { createSchema } flatMap { _ ⇒ Future.successful(true) }

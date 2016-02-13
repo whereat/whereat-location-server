@@ -18,7 +18,7 @@
 package io.whereat.config
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
+import org.scalatest.time.{Seconds, Span, Millis}
 import org.scalatest.{Matchers, WordSpecLike}
 import slick.jdbc.meta.MTable
 
@@ -30,7 +30,9 @@ class EnvironmentSpec extends WordSpecLike
 with Matchers
 with ScalaFutures {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
+  implicit override val patienceConfig = PatienceConfig(
+    timeout = Span(10, Seconds),
+    interval = Span(100, Millis))
 
   "`#of`" should {
 
@@ -57,6 +59,10 @@ with ScalaFutures {
       val db = Environment.dbFor(Prod)
       db.run(MTable.getTables).futureValue should not be empty
 
+      /*whenReady(db.run(MTable.getTables)) { ts ⇒
+        ts should not be empty
+      }
+      */
       db.shutdown.futureValue
     }
 

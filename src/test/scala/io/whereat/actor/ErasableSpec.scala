@@ -53,7 +53,7 @@ class ErasableSpec(_system: ActorSystem)
       "schedule periodic erasures of the DB" in {
 
         val interval = 200 milli
-        val offset = 10 milli
+        val offset = 20 milli
         val eraseActorRef = TestActorRef(new EraseActor)
 
         scheduleErase(system, testActor, fakeDao, interval)

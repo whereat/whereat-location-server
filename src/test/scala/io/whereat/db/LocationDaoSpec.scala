@@ -19,25 +19,11 @@ package io.whereat.db
 
 import io.whereat.model.WrappedLocation
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest._
 import slick.driver.H2Driver.api._
 import io.whereat.support.SampleData.{n17, s17}
-
-  /**
-   * NOTE: the tests in this bracket require the following
-   * environment variables to be defined in order to pass:
-   *
-   *   WHEREAT_DEV_DATABASE_URL
-   *   WHEREAT_PROD_DATABASE_URL
-   *   WHEREAT_TEST_DATABASE_URL_1
-   *   WHEREAT_TEST_DATABASE_URL_2
-   *
-   * The variables should refer to valide remote JDBC databases
-   * and must have the following query string appended to the URL:
-   *
-   * `?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory`
-   */
+import slick.jdbc.meta.MTable
 
 class LocationDaoSpec
   extends WordSpec
@@ -46,18 +32,21 @@ class LocationDaoSpec
   with BeforeAndAfter
   with ScalaFutures {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
+  implicit override val patienceConfig = PatienceConfig(
+    timeout = Span(10, Seconds),
+    interval = Span(100, Millis))
+
   implicit val ec_ = scala.concurrent.ExecutionContext.global
   var dao: LocationDaoImpl = _
 
   before {
     dao = LocationDaoImpl(Database.forConfig("db.test2"))
-    dao.db.run {
+    (
       for {
-        _ ← createSchema
-        _ ← insert(s17)
-      } yield {}
-    }.futureValue
+        _ ← dao.build
+        _ ← dao.db.run(insert(s17))
+      } yield ()
+    ).futureValue
   }
 
   after {

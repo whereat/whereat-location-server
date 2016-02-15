@@ -19,10 +19,6 @@ package io.whereat.support
 
 import io.whereat.model.{User, JsonProtocols, Location}
 
-/**
- * Author: @aguestuser
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- */
 
 object SampleData extends JsonProtocols {
 

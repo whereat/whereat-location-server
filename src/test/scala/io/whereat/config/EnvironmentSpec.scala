@@ -59,10 +59,6 @@ with ScalaFutures {
       val db = Environment.dbFor(Prod)
       db.run(MTable.getTables).futureValue should not be empty
 
-      /*whenReady(db.run(MTable.getTables)) { ts ⇒
-        ts should not be empty
-      }
-      */
       db.shutdown.futureValue
     }
 

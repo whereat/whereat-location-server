@@ -13,7 +13,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 scalacOptions ++= Seq("-Xmax-classfile-name", "128")
 
 libraryDependencies ++= {
-  val akkaStreamVersion = "2.0.2"
+  val akkaStreamVersion = "2.0.3"
   val akkaVersion = "2.3.14"
   val h2Version = "1.4.187"
   val hikariCpVersion = "2.3.12"

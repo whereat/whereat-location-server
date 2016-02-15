@@ -1,7 +1,4 @@
-package io.whereat
-
-/**
- *
+/*
  * Copyright (c) 2015-present, Total Location Test Paragraph.
  * All rights reserved.
  *
@@ -14,8 +11,9 @@ package io.whereat
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. For more details,
  * see the full license at <http://www.gnu.org/licenses/gpl-3.0.en.html>
- *
  */
+
+package io.whereat
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http

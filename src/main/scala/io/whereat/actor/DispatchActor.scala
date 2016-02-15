@@ -13,12 +13,25 @@
  * see the full license at <http://www.gnu.org/licenses/gpl-3.0.en.html>
  */
 
-package io.whereat.integration.support
+package io.whereat.actor
 
-import java.net.ServerSocket
+import akka.actor.{Actor, ActorRef}
 
-import io.whereat.config.Config
+case class Subscribe(subscriber: ActorRef)
+case class Unsubscribe(subscriber: ActorRef)
 
-trait TestConfig extends Config {
-  override val httpPort = new ServerSocket(0).getLocalPort
+class DispatchActor extends Actor {
+
+  var subscribers = Set.empty[ActorRef]
+
+  def broadcast(msg: Any): Unit = subscribers.foreach(_ ! msg)
+
+  override def receive = {
+    case Subscribe(subscriber) =>
+      subscribers += subscriber
+    case Unsubscribe(subscriber) =>
+      subscribers -= subscriber
+    case msg =>
+      broadcast(msg)
+  }
 }

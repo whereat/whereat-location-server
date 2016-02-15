@@ -20,11 +20,7 @@ package io.whereat.model
 import org.scalatest.{Matchers, WordSpec}
 import spray.json._
 
-/**
- * Author: @aguestuser
- * Date: 9/7/15
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
- */
+
 class MessageSpec
   extends WordSpec
   with Matchers

@@ -26,10 +26,6 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
 
-/**
- * Author: @aguestuser
- * License: GPLv2 (https://www.gnu.org/licenses/gpl-2.0.html)
- */
 
 class ErasableSpec(_system: ActorSystem)
   extends TestKit(_system)

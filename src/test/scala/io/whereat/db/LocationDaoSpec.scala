@@ -44,6 +44,7 @@ class LocationDaoSpec
     (
       for {
         _ ← dao.build
+        _ ← dao.erase
         _ ← dao.db.run(insert(s17))
       } yield ()
     ).futureValue

@@ -15,13 +15,15 @@
 
 package io.whereat.flow
 
+import java.util.UUID
+
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.model.ws.TextMessage.Strict
 import akka.stream.scaladsl._
 import akka.stream.{BidiShape, OverflowStrategy}
-import io.whereat.actor.{DispatchActor, Subscribe}
+import io.whereat.actor.{Unsubscribe, DispatchActor, Subscribe}
 import io.whereat.model.{Error, JsonProtocols, Location}
 import spray.json._
 
@@ -65,12 +67,13 @@ object RelayFlows extends JsonProtocols {
   }
 
   val dispatchFlow: Flow[Location, Location, Unit] = {
+    val id: String = UUID.randomUUID().toString
     val source: Source[Location, Unit] = Source.actorRef[Location](1, OverflowStrategy.fail).mapMaterializedValue(
       subscriber =>
-        dispatchActor ! Subscribe(subscriber)
+        dispatchActor ! Subscribe(id, subscriber)
     )
 
-    val sink: Sink[Any, Unit] = Sink.actorRef(dispatchActor, "TEST")
+    val sink: Sink[Any, Unit] = Sink.actorRef(dispatchActor, Unsubscribe(id))
 
     Flow.fromSinkAndSource(sink, source)
   }

@@ -17,20 +17,20 @@ package io.whereat.actor
 
 import akka.actor.{Actor, ActorRef}
 
-case class Subscribe(subscriber: ActorRef)
-case class Unsubscribe(subscriber: ActorRef)
+case class Subscribe(id: String, subscriber: ActorRef)
+case class Unsubscribe(id: String)
 
 class DispatchActor extends Actor {
 
-  var subscribers = Set.empty[ActorRef]
+  var subscribers: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-  def broadcast(msg: Any): Unit = subscribers.foreach(_ ! msg)
+  def broadcast(msg: Any): Unit = subscribers.foreach(_._2 ! msg)
 
   override def receive = {
-    case Subscribe(subscriber) =>
-      subscribers += subscriber
-    case Unsubscribe(subscriber) =>
-      subscribers -= subscriber
+    case Subscribe(id, subscriber) =>
+      subscribers += (id -> subscriber)
+    case Unsubscribe(id) =>
+      subscribers -= id
     case msg =>
       broadcast(msg)
   }

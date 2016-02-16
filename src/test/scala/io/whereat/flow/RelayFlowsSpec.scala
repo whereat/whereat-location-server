@@ -193,5 +193,25 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
       pub.sendNext(location)
       sub.expectNext(location)
     }
+
+    "send an unsubscribe when a connection is closed" in {
+      val location = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
+
+      val (pub: Probe[Location], _) = TestSource.probe[Location]
+        .via(RelayFlows.dispatchFlow)
+        .toMat(TestSink.probe[Location])(Keep.both)
+        .run()
+
+      val (pub2, sub2: TestSubscriber.Probe[Location]) = TestSource.probe[Location]
+        .via(RelayFlows.dispatchFlow)
+        .toMat(TestSink.probe[Location])(Keep.both)
+        .run()
+
+      pub2.sendComplete() // simulates closing websocket for client 2
+
+      sub2.request(1)
+      pub.sendNext(location)
+      sub2.expectNoMsg()
+    }
   }
 }

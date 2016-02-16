@@ -27,7 +27,7 @@ class DispatchActorSpec extends WordSpec with JsonProtocols with ShouldMatchers 
   "The dispatch actor" should {
     "broadcast a message to an actor after it subscribes and sends a message" in {
       val probe = TestProbe()
-      dispatchActor ! Subscribe(probe.ref)
+      dispatchActor ! Subscribe("id1", probe.ref)
       dispatchActor ! "hello"
       probe.expectMsg("hello")
     }
@@ -35,8 +35,8 @@ class DispatchActorSpec extends WordSpec with JsonProtocols with ShouldMatchers 
     "broadcast a message to all actors after they subscribe and a message is sent" in {
       val probe1 = TestProbe()
       val probe2 = TestProbe()
-      dispatchActor ! Subscribe(probe1.ref)
-      dispatchActor ! Subscribe(probe2.ref)
+      dispatchActor ! Subscribe("id1", probe1.ref)
+      dispatchActor ! Subscribe("id2", probe2.ref)
       dispatchActor ! "hello"
       probe1.expectMsg("hello")
       probe2.expectMsg("hello")
@@ -45,9 +45,9 @@ class DispatchActorSpec extends WordSpec with JsonProtocols with ShouldMatchers 
     "not broadcast a message to a subscribed actor after it unsubscribes" in {
       val probe1 = TestProbe()
       val probe2 = TestProbe()
-      dispatchActor ! Subscribe(probe1.ref)
-      dispatchActor ! Subscribe(probe2.ref)
-      dispatchActor ! Unsubscribe(probe1.ref)
+      dispatchActor ! Subscribe("id1", probe1.ref)
+      dispatchActor ! Subscribe("id2", probe2.ref)
+      dispatchActor ! Unsubscribe("id1")
       dispatchActor ! "hello"
       probe1.expectNoMsg()
       probe2.expectMsg("hello")

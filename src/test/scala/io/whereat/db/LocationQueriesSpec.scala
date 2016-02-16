@@ -26,9 +26,6 @@ import io.whereat.support.SampleData.{n17, s17, s17_}
 
 import scala.concurrent.Future
 
-/**
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- */
 
 class LocationQueriesSpec
   extends WordSpec
@@ -49,6 +46,9 @@ class LocationQueriesSpec
       .flatMap(exists ⇒
           if(!exists) db.run(createSchema)
           else Future.successful(())
+      )
+      .flatMap( _ =>
+        db.run(clear)
       ).futureValue
   }
   after {

@@ -174,4 +174,24 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
       sub.expectNext(TextMessage.Strict(error.toJson.toString))
     }
   }
+
+  "The dispatch flow" should {
+    "broadcast a message" in {
+      val location = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
+
+      val (pub: Probe[Location], _) = TestSource.probe[Location]
+        .via(RelayFlows.dispatchFlow)
+        .toMat(TestSink.probe[Location])(Keep.both)
+        .run()
+
+      val (_, sub: TestSubscriber.Probe[Location]) = TestSource.probe[Location]
+        .via(RelayFlows.dispatchFlow)
+        .toMat(TestSink.probe[Location])(Keep.both)
+        .run()
+
+      sub.request(1)
+      pub.sendNext(location)
+      sub.expectNext(location)
+    }
+  }
 }

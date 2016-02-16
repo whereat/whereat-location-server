@@ -15,17 +15,23 @@
 
 package io.whereat.flow
 
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.model.ws.TextMessage.Strict
-import akka.stream.BidiShape
 import akka.stream.scaladsl._
+import akka.stream.{BidiShape, OverflowStrategy}
+import io.whereat.actor.{DispatchActor, Subscribe}
 import io.whereat.model.{Error, JsonProtocols, Location}
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
 
 object RelayFlows extends JsonProtocols {
+
+  private implicit val system : ActorSystem = ActorSystem()
+  private val dispatchActor: ActorRef = system.actorOf(Props[DispatchActor])
+
   val errorHandlingFlow: BidiFlow[Try[Location], Location, Location, Either[Error, Location], Unit] =
     BidiFlow.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
@@ -56,5 +62,16 @@ object RelayFlows extends JsonProtocols {
   val serializationFlow = Flow[Either[Error, Location]].map {
     case Left(error) => TextMessage.Strict(error.toJson.toString)
     case Right(location) => TextMessage.Strict(location.toJson.toString)
+  }
+
+  val dispatchFlow: Flow[Location, Location, Unit] = {
+    val source: Source[Location, Unit] = Source.actorRef[Location](1, OverflowStrategy.fail).mapMaterializedValue(
+      subscriber =>
+        dispatchActor ! Subscribe(subscriber)
+    )
+
+    val sink: Sink[Any, Unit] = Sink.actorRef(dispatchActor, "TEST")
+
+    Flow.fromSinkAndSource(sink, source)
   }
 }

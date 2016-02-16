@@ -79,7 +79,7 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
             get {
               handleWebsocketMessages(
                 deserializationFlow
-                  .via(errorHandlingFlow.join(Flow[Location]))
+                  .via(errorHandlingFlow.join(dispatchFlow))
                   .via(serializationFlow)
               )
             }

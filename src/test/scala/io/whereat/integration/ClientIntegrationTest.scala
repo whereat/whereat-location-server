@@ -21,7 +21,9 @@ import io.whereat.integration.support.{TestConfig, TestWebClient}
 import io.whereat.MainTrait
 import io.whereat.model.{LocationJsonProtocol, Location}
 import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.concurrent.ScalaFutures._
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{Matchers, ShouldMatchers, WordSpec}
 import spray.json._
 
@@ -36,9 +38,9 @@ class ClientIntegrationTest
   object TestMain extends MainTrait with TestConfig
 
   "The server" should {
-    "relay a location from one client to another" ignore {
+    "relay a location from one client to another" in {
       // TODO: MainTrait#run does NOT return a future that reflects the server state. This needs to be fixed
-      TestMain.run.futureValue
+      TestMain.run.futureValue(PatienceConfiguration.Timeout(Span(2, Seconds)))
 
       val serverUri: URI = new URI(s"ws://${TestMain.httpInterface}:${TestMain.httpPort}/locations/websocket")
 

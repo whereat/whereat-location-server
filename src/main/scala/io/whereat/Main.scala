@@ -17,6 +17,7 @@ package io.whereat
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.{ActorMaterializer, Materializer}
 import io.whereat.actor.{Erasable, EraseActor}
 import io.whereat.config.Config
@@ -37,14 +38,14 @@ trait MainTrait extends Routes with Erasable {
   val dao = LocationDaoImpl(db)
   val eraseActor = system.actorOf(Props[EraseActor])
 
-  def run: Future[Unit] = {
+  def run: Future[ServerBinding] = {
 
-    dao.build map { _ ⇒
+    dao.build flatMap { _ ⇒
 
-      Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
       println(s"Server online at http://localhost:$httpPort")
 
       scheduleErase(system, eraseActor, dao, 1 hour)
+      Http().bindAndHandle(route(LocationDaoImpl(db)), httpInterface, httpPort)
     }
   }
 }

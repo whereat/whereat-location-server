@@ -22,9 +22,6 @@ import org.scalatest.time.{Seconds, Span, Millis}
 import org.scalatest.{Matchers, WordSpecLike}
 import slick.jdbc.meta.MTable
 
-/**
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- */
 
 class EnvironmentSpec extends WordSpecLike
 with Matchers

@@ -36,7 +36,7 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
   implicit def executor: ExecutionContextExecutor
   implicit val materializer: Materializer
 
-  def route[T <: LocationDao](dao: T): Route = {
+  def route(dao: LocationDao): Route = {
     val dispatchActor = system.actorOf(Props[DispatchActor])
 
     pkpHandler {

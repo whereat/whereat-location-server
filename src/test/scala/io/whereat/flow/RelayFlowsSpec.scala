@@ -36,6 +36,7 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val dispatchActor: ActorRef = actorSystem.actorOf(Props[DispatchActor])
+  private val TestLocation = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
 
   "The deserialization flow" should {
     "return a Success(location) on valid location JSON" in {
@@ -43,12 +44,11 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
         .via(RelayFlows.deserializationFlow)
         .toMat(TestSink.probe[Try[Location]])(Keep.both)
         .run()
-      val location: Location = Location(id = "id", lat = 10L, lon = -10L, time = 0)
-      val locationJson: String = location.toJson.toString
+      val locationJson: String = TestLocation.toJson.toString
 
       sub.request(1)
       pub.sendNext(TextMessage.Strict(locationJson))
-      sub.expectNext(Success(location))
+      sub.expectNext(Success(TestLocation))
     }
 
     "return a Failure on invalid JSON" in {
@@ -90,17 +90,15 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
         FlowShape(handlingFlow.in1, handlingFlow.out1)
       }
 
-      val location: Location = Location(id = "id", lat = 10L, lon = -10L, time = 20)
-
       val (publisher: Probe[Try[Location]], subscriber: TestSubscriber.Probe[Location]) = TestSource.probe[Try[Location]]
         .via(pluggedFlow)
         .toMat(TestSink.probe[Location])(Keep.both)
         .run()
       subscriber.request(1)
 
-      publisher.sendNext(Success(location))
+      publisher.sendNext(Success(TestLocation))
 
-      subscriber.expectNext(location)
+      subscriber.expectNext(TestLocation)
     }
 
     "pass error messages back to the websocket" in {
@@ -113,8 +111,6 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
 
         FlowShape(handlingFlow.in1, handlingFlow.out2)
       }
-
-      val location: Location = Location(id = "id", lat = 10L, lon = -10L, time = 20)
 
       val (publisher: Probe[Try[Location]], subscriber: TestSubscriber.Probe[Either[Error, Location]]) = TestSource.probe[Try[Location]]
         .via(pluggedFlow)
@@ -138,17 +134,15 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
         FlowShape(handlingFlow.in2, handlingFlow.out2)
       }
 
-      val location: Location = Location(id = "id", lat = 10L, lon = -10L, time = 20)
-
       val (publisher: Probe[Location], subscriber: TestSubscriber.Probe[Either[Error, Location]]) = TestSource.probe[Location]
         .via(pluggedFlow)
         .toMat(TestSink.probe[Either[Error, Location]])(Keep.both)
         .run()
       subscriber.request(1)
 
-      publisher.sendNext(location)
+      publisher.sendNext(TestLocation)
 
-      subscriber.expectNext(Right(location))
+      subscriber.expectNext(Right(TestLocation))
     }
   }
 
@@ -159,11 +153,9 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
         .toMat(TestSink.probe[Message])(Keep.both)
         .run()
 
-      val location = Location(id="42", lat=7, lon=9, time=33333)
-
       sub.request(1)
-      pub.sendNext(Right(location))
-      sub.expectNext(TextMessage.Strict(location.toJson.toString))
+      pub.sendNext(Right(TestLocation))
+      sub.expectNext(TextMessage.Strict(TestLocation.toJson.toString))
     }
 
     "serialize an Error" in {
@@ -182,8 +174,6 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
 
   "The dispatch flow" should {
     "broadcast a message" in {
-      val location = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
-
       val (pub: Probe[Location], _) = TestSource.probe[Location]
         .via(RelayFlows.dispatchFlow)
         .toMat(TestSink.probe[Location])(Keep.both)
@@ -195,12 +185,11 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
         .run()
 
       sub.request(1)
-      pub.sendNext(location)
-      sub.expectNext(location)
+      pub.sendNext(TestLocation)
+      sub.expectNext(TestLocation)
     }
 
     "send an unsubscribe when a connection is closed" in {
-      val location = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
 
       val dispatchActor: TestProbe = TestProbe()
 

@@ -31,9 +31,6 @@ import spray.json._
 
 import scala.concurrent.Future
 
-/**
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- */
 
 class RoutesSpec extends WordSpec
 with Matchers

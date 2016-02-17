@@ -15,7 +15,7 @@
 
 package io.whereat.actor
 
-import akka.actor.{Terminated, Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import io.whereat.model.JsonProtocols
 import org.scalatest.{ShouldMatchers, WordSpec}

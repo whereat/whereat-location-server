@@ -39,7 +39,6 @@ class ClientIntegrationTest
 
   "The server" should {
     "relay a location from one client to another" in {
-      // TODO: MainTrait#run does NOT return a future that reflects the server state. This needs to be fixed
       TestMain.run.futureValue(PatienceConfiguration.Timeout(Span(2, Seconds)))
 
       val serverUri: URI = new URI(s"ws://${TestMain.httpInterface}:${TestMain.httpPort}/locations/websocket")

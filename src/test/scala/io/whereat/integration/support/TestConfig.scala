@@ -20,5 +20,10 @@ import java.net.ServerSocket
 import io.whereat.config.Config
 
 trait TestConfig extends Config {
-  override val httpPort = new ServerSocket(0).getLocalPort
+  override val httpPort = {
+    val socket: ServerSocket = new ServerSocket(0)
+    val port = socket.getLocalPort
+    socket.close()
+    port
+  }
 }

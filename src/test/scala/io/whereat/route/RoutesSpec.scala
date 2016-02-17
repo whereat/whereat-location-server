@@ -20,33 +20,34 @@ package io.whereat.route
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.server.{Rejection, MalformedRequestContentRejection}
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
+import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import io.whereat.db.LocationDao
-import io.whereat.model.WrappedLocation
+import io.whereat.model.{JsonProtocols, Location, WrappedLocation}
+import io.whereat.support.SampleData._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import io.whereat.support.SampleData._
-
-//import org.scalamock.scalatest.proxy.MockFactory
-
+import spray.json._
 
 import scala.concurrent.Future
 
-/**
- * License: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
- */
 
 class RoutesSpec extends WordSpec
 with Matchers
 with MockFactory
 with ScalatestRouteTest
 with Routes
-with BeforeAndAfterEach {
+with BeforeAndAfterEach
+with JsonProtocols {
 
   val fakeDao = mock[LocationDao]
   val rte = route(fakeDao)
   val rejectMsg = { r:Rejection ⇒ r match { case MalformedRequestContentRejection(msg,_) ⇒ msg } }
+  var wsClient: WSProbe = _
+
+  override def beforeEach: Unit = {
+    wsClient = WSProbe()
+  }
 
   "The API service" when {
 
@@ -184,6 +185,48 @@ with BeforeAndAfterEach {
              |  "msg": "Database erased. 3 record(s) deleted."
              |}""".stripMargin
           }
+        }
+      }
+    }
+
+    "receiving GET /locations/websocket" should {
+
+      "establish a websocket connection" in {
+
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          isWebsocketUpgrade shouldEqual true
+        }
+      }
+
+      "echo location back" in {
+
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          val location: Location = Location("id", 10.0, 20.0, 5000L)
+          val serializedLocation: String = location.toJson.toString
+
+          wsClient.sendMessage(serializedLocation)
+          wsClient.expectMessage(serializedLocation)
+        }
+      }
+
+      "report error on invalid JSON" in {
+
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          val invalidJson: String = "Invalid JSON"
+
+          wsClient.sendMessage(invalidJson)
+          wsClient.expectMessage("{\"error\":\"Invalid location\"}")
+        }
+      }
+
+      "report error on invalid location JSON" in {
+
+        WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
+          val validNonLocationJson: String = Seq("Test").toJson.toString
+
+          wsClient.sendMessage(validNonLocationJson)
+
+          wsClient.expectMessage("{\"error\":\"Invalid location\"}")
         }
       }
     }

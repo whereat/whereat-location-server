@@ -17,10 +17,13 @@
 
 package io.whereat.route
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, Props, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import akka.stream.scaladsl.Flow
+import io.whereat.actor.DispatchActor
+import io.whereat.flow.RelayFlows._
 import io.whereat.db.LocationDao
 import io.whereat.model._
 
@@ -33,7 +36,9 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
   implicit def executor: ExecutionContextExecutor
   implicit val materializer: Materializer
 
-  def route[T <: LocationDao](dao: T): Route =
+  def route(dao: LocationDao): Route = {
+    val dispatchActor = system.actorOf(Props[DispatchActor])
+
     pkpHandler {
       corsHandler {
         path("hello") {
@@ -72,8 +77,18 @@ trait Routes extends CorsSupport with PublicKeyPinningSupport with JsonProtocols
                 } map completer
               }
             }
+          } ~
+          path("websocket") {
+            get {
+              val relayFlow = deserializationFlow
+                .via(errorHandlingFlow.join(dispatchFlow(dispatchActor)))
+                .via(serializationFlow)
+
+              handleWebsocketMessages(relayFlow)
+            }
           }
         }
       }
     }
   }
+}

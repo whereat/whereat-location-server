@@ -23,7 +23,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.{MalformedRequestContentRejection, Rejection}
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import io.whereat.db.LocationDao
-import io.whereat.model.{JsonProtocols, Location, WrappedLocation}
+import io.whereat.model.{ExpiringLocation, JsonProtocols, Location, WrappedLocation}
 import io.whereat.support.SampleData._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
@@ -201,7 +201,7 @@ with JsonProtocols {
       "echo location back" in {
 
         WS("/locations/websocket", wsClient.flow) ~> rte ~> check {
-          val location: Location = Location("id", 10.0, 20.0, 5000L)
+          val location: ExpiringLocation = ExpiringLocation(10.0, 20.0, 5000)
           val serializedLocation: String = location.toJson.toString
 
           wsClient.sendMessage(serializedLocation)

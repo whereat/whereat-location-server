@@ -21,9 +21,9 @@ import io.whereat.config.Config
 
 trait TestConfig extends Config {
   override val httpPort = {
-    val socket: ServerSocket = new ServerSocket(0)
+    val socket: ServerSocket = new ServerSocket(0) // Gets available port, but then connects to it
     val port = socket.getLocalPort
-    socket.close()
+    socket.close() // So disconnect before returning the port as available
     port
   }
 }

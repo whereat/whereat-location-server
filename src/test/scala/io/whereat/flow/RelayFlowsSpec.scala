@@ -15,22 +15,27 @@
 
 package io.whereat.flow
 
-import akka.actor.ActorSystem
+import _root_.io.whereat.actor.{DispatchActor, Subscribe, Unsubscribe}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.testkit.TestProbe
 import io.whereat.model.{Error, JsonProtocols, Location}
 import akka.stream._
 import akka.stream.scaladsl.{Keep, _}
 import akka.stream.testkit.TestPublisher.Probe
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.{TestSink, TestSource}
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ShouldMatchers, WordSpec}
 import spray.json._
 
+import scala.collection.immutable.Seq
 import scala.util.{Failure, Success, Try}
 
-class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
+class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers with MockFactory {
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
+  implicit val dispatchActor: ActorRef = actorSystem.actorOf(Props[DispatchActor])
 
   "The deserialization flow" should {
     "return a Success(location) on valid location JSON" in {
@@ -197,21 +202,25 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers {
     "send an unsubscribe when a connection is closed" in {
       val location = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
 
+      val dispatchActor: TestProbe = TestProbe()
+
       val (pub: Probe[Location], _) = TestSource.probe[Location]
-        .via(RelayFlows.dispatchFlow)
+        .via(RelayFlows.dispatchFlow(dispatchActor.ref))
         .toMat(TestSink.probe[Location])(Keep.both)
         .run()
 
-      val (pub2, sub2: TestSubscriber.Probe[Location]) = TestSource.probe[Location]
-        .via(RelayFlows.dispatchFlow)
+      dispatchActor.receiveN(1)
+
+      val (pub2: Probe[Location], sub2: TestSubscriber.Probe[Location]) = TestSource.probe[Location]
+        .via(RelayFlows.dispatchFlow(dispatchActor.ref))
         .toMat(TestSink.probe[Location])(Keep.both)
         .run()
+
+      val subscribeMessages: Seq[Subscribe] = dispatchActor.receiveN(1).map(_.asInstanceOf[Subscribe])
 
       pub2.sendComplete() // simulates closing websocket for client 2
 
-      sub2.request(1)
-      pub.sendNext(location)
-      sub2.expectNoMsg()
+      dispatchActor.expectMsg(Unsubscribe(subscribeMessages.head.id))
     }
   }
 }

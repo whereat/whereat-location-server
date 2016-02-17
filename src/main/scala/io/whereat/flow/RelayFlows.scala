@@ -32,7 +32,6 @@ import scala.util.{Failure, Success, Try}
 object RelayFlows extends JsonProtocols {
 
   private implicit val system : ActorSystem = ActorSystem()
-  private val dispatchActor: ActorRef = system.actorOf(Props[DispatchActor])
 
   val errorHandlingFlow: BidiFlow[Try[Location], Location, Location, Either[Error, Location], Unit] =
     BidiFlow.fromGraph(GraphDSL.create() { implicit b =>
@@ -66,7 +65,7 @@ object RelayFlows extends JsonProtocols {
     case Right(location) => TextMessage.Strict(location.toJson.toString)
   }
 
-  val dispatchFlow: Flow[Location, Location, Unit] = {
+  def dispatchFlow(implicit dispatchActor: ActorRef): Flow[Location, Location, Unit] = {
     val id: String = UUID.randomUUID().toString
     val source: Source[Location, Unit] = Source.actorRef[Location](1, OverflowStrategy.fail).mapMaterializedValue(
       subscriber =>

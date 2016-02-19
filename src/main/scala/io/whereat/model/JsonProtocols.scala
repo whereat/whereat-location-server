@@ -21,6 +21,7 @@ package io.whereat.model
 trait JsonProtocols
   extends LocationJsonProtocol
     with WrappedLocationJsonProtocol
+    with ExpiringLocationJsonProtocol
     with UserJsonProtocol
     with MessageJsonProtocol
     with ErrorJsonProtocol

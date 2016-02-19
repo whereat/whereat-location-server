@@ -13,17 +13,14 @@
  * see the full license at <http://www.gnu.org/licenses/gpl-3.0.en.html>
  */
 
-package io.whereat.integration.support
+package io.whereat.model
 
-import java.net.ServerSocket
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
 
-import io.whereat.config.Config
+case class ExpiringLocation(lat: Double, lon: Double, ttl: Int)
 
-trait TestConfig extends Config {
-  override val httpPort = {
-    val socket: ServerSocket = new ServerSocket(0) // Gets available port, but then connects to it
-    val port = socket.getLocalPort
-    socket.close() // So disconnect before returning the port as available
-    port
-  }
+trait ExpiringLocationJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
+  implicit val expiringLocationFormat = jsonFormat3(ExpiringLocation.apply)
 }
+

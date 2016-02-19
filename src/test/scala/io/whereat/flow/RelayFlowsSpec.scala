@@ -15,11 +15,11 @@
 
 package io.whereat.flow
 
-import _root_.io.whereat.actor.{DispatchActor, Subscribe, Unsubscribe}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.testkit.TestProbe
-import io.whereat.model.{Error, JsonProtocols, Location}
+import io.whereat.actor.{DispatchActor, Subscribe, Unsubscribe}
+import io.whereat.model.{Error, ExpiringLocation, JsonProtocols}
 import akka.stream._
 import akka.stream.scaladsl.{Keep, _}
 import akka.stream.testkit.TestPublisher.Probe
@@ -36,13 +36,13 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val dispatchActor: ActorRef = actorSystem.actorOf(Props[DispatchActor])
-  private val TestLocation = Location(id = "id", lat = 25.197, lon = 55.274, time = 5)
+  private val TestLocation = ExpiringLocation(lat = 25.197, lon = 55.274, ttl = 5)
 
   "The deserialization flow" should {
     "return a Success(location) on valid location JSON" in {
-      val (pub: Probe[Message], sub: TestSubscriber.Probe[Try[Location]]) = TestSource.probe[Message]
+      val (pub: Probe[Message], sub: TestSubscriber.Probe[Try[ExpiringLocation]]) = TestSource.probe[Message]
         .via(RelayFlows.deserializationFlow)
-        .toMat(TestSink.probe[Try[Location]])(Keep.both)
+        .toMat(TestSink.probe[Try[ExpiringLocation]])(Keep.both)
         .run()
       val locationJson: String = TestLocation.toJson.toString
 
@@ -52,9 +52,9 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
     }
 
     "return a Failure on invalid JSON" in {
-      val (pub: Probe[Message], sub: TestSubscriber.Probe[Try[Location]]) = TestSource.probe[Message]
+      val (pub: Probe[Message], sub: TestSubscriber.Probe[Try[ExpiringLocation]]) = TestSource.probe[Message]
         .via(RelayFlows.deserializationFlow)
-        .toMat(TestSink.probe[Try[Location]])(Keep.both)
+        .toMat(TestSink.probe[Try[ExpiringLocation]])(Keep.both)
         .run()
 
       val invalidJson: String = "Not JSON"
@@ -65,9 +65,9 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
     }
 
     "return a Failure on non-location JSON" in {
-      val (pub: Probe[Message], sub: TestSubscriber.Probe[Try[Location]]) = TestSource.probe[Message]
+      val (pub: Probe[Message], sub: TestSubscriber.Probe[Try[ExpiringLocation]]) = TestSource.probe[Message]
         .via(RelayFlows.deserializationFlow)
-        .toMat(TestSink.probe[Try[Location]])(Keep.both)
+        .toMat(TestSink.probe[Try[ExpiringLocation]])(Keep.both)
         .run()
 
       val nonLocationJson: String = "[\"Not a location\"]"
@@ -80,19 +80,19 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
 
   "The error handling flow" should {
     "pass valid locations on to the next step" in {
-      val pluggedFlow: Graph[FlowShape[Try[Location], Location], Unit] = GraphDSL.create() { implicit b =>
+      val pluggedFlow: Graph[FlowShape[Try[ExpiringLocation], ExpiringLocation], Unit] = GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
-        val handlingFlow: BidiShape[Try[Location], Location, Location, Either[Error, Location]] = b.add(RelayFlows.errorHandlingFlow)
+        val handlingFlow: BidiShape[Try[ExpiringLocation], ExpiringLocation, ExpiringLocation, Either[Error, ExpiringLocation]] = b.add(RelayFlows.errorHandlingFlow)
 
-        Source.empty[Location] ~> handlingFlow.in2
+        Source.empty[ExpiringLocation] ~> handlingFlow.in2
         handlingFlow.out2 ~> Sink.ignore
 
         FlowShape(handlingFlow.in1, handlingFlow.out1)
       }
 
-      val (publisher: Probe[Try[Location]], subscriber: TestSubscriber.Probe[Location]) = TestSource.probe[Try[Location]]
+      val (publisher: Probe[Try[ExpiringLocation]], subscriber: TestSubscriber.Probe[ExpiringLocation]) = TestSource.probe[Try[ExpiringLocation]]
         .via(pluggedFlow)
-        .toMat(TestSink.probe[Location])(Keep.both)
+        .toMat(TestSink.probe[ExpiringLocation])(Keep.both)
         .run()
       subscriber.request(1)
 
@@ -102,19 +102,19 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
     }
 
     "pass error messages back to the websocket" in {
-      val pluggedFlow: Graph[FlowShape[Try[Location], Either[Error, Location]], Unit] = GraphDSL.create() { implicit b =>
+      val pluggedFlow: Graph[FlowShape[Try[ExpiringLocation], Either[Error, ExpiringLocation]], Unit] = GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
-        val handlingFlow: BidiShape[Try[Location], Location, Location, Either[Error, Location]] = b.add(RelayFlows.errorHandlingFlow)
+        val handlingFlow: BidiShape[Try[ExpiringLocation], ExpiringLocation, ExpiringLocation, Either[Error, ExpiringLocation]] = b.add(RelayFlows.errorHandlingFlow)
 
-        Source.empty[Location] ~> handlingFlow.in2
+        Source.empty[ExpiringLocation] ~> handlingFlow.in2
         handlingFlow.out1 ~> Sink.ignore
 
         FlowShape(handlingFlow.in1, handlingFlow.out2)
       }
 
-      val (publisher: Probe[Try[Location]], subscriber: TestSubscriber.Probe[Either[Error, Location]]) = TestSource.probe[Try[Location]]
+      val (publisher: Probe[Try[ExpiringLocation]], subscriber: TestSubscriber.Probe[Either[Error, ExpiringLocation]]) = TestSource.probe[Try[ExpiringLocation]]
         .via(pluggedFlow)
-        .toMat(TestSink.probe[Either[Error, Location]])(Keep.both)
+        .toMat(TestSink.probe[Either[Error, ExpiringLocation]])(Keep.both)
         .run()
       subscriber.request(1)
 
@@ -126,17 +126,17 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
     "pass locations coming from the dispatcher to the websocket" in {
       val pluggedFlow = GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
-        val handlingFlow: BidiShape[Try[Location], Location, Location, Either[Error, Location]] = b.add(RelayFlows.errorHandlingFlow)
+        val handlingFlow: BidiShape[Try[ExpiringLocation], ExpiringLocation, ExpiringLocation, Either[Error, ExpiringLocation]] = b.add(RelayFlows.errorHandlingFlow)
 
-        Source.empty[Try[Location]] ~> handlingFlow.in1
+        Source.empty[Try[ExpiringLocation]] ~> handlingFlow.in1
         handlingFlow.out1 ~> Sink.ignore
 
         FlowShape(handlingFlow.in2, handlingFlow.out2)
       }
 
-      val (publisher: Probe[Location], subscriber: TestSubscriber.Probe[Either[Error, Location]]) = TestSource.probe[Location]
+      val (publisher: Probe[ExpiringLocation], subscriber: TestSubscriber.Probe[Either[Error, ExpiringLocation]]) = TestSource.probe[ExpiringLocation]
         .via(pluggedFlow)
-        .toMat(TestSink.probe[Either[Error, Location]])(Keep.both)
+        .toMat(TestSink.probe[Either[Error, ExpiringLocation]])(Keep.both)
         .run()
       subscriber.request(1)
 
@@ -148,7 +148,7 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
 
   "The serialization flow" should {
     "serialize a location" in {
-      val (pub: Probe[Either[Error, Location]], sub: TestSubscriber.Probe[Message]) = TestSource.probe[Either[Error, Location]]
+      val (pub: Probe[Either[Error, ExpiringLocation]], sub: TestSubscriber.Probe[Message]) = TestSource.probe[Either[Error, ExpiringLocation]]
         .via(RelayFlows.serializationFlow)
         .toMat(TestSink.probe[Message])(Keep.both)
         .run()
@@ -159,7 +159,7 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
     }
 
     "serialize an Error" in {
-      val (pub: Probe[Either[Error, Location]], sub: TestSubscriber.Probe[Message]) = TestSource.probe[Either[Error, Location]]
+      val (pub: Probe[Either[Error, ExpiringLocation]], sub: TestSubscriber.Probe[Message]) = TestSource.probe[Either[Error, ExpiringLocation]]
         .via(RelayFlows.serializationFlow)
         .toMat(TestSink.probe[Message])(Keep.both)
         .run()
@@ -174,14 +174,14 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
 
   "The dispatch flow" should {
     "broadcast a message" in {
-      val (pub: Probe[Location], _) = TestSource.probe[Location]
+      val (pub: Probe[ExpiringLocation], _) = TestSource.probe[ExpiringLocation]
         .via(RelayFlows.dispatchFlow)
-        .toMat(TestSink.probe[Location])(Keep.both)
+        .toMat(TestSink.probe[ExpiringLocation])(Keep.both)
         .run()
 
-      val (_, sub: TestSubscriber.Probe[Location]) = TestSource.probe[Location]
+      val (_, sub: TestSubscriber.Probe[ExpiringLocation]) = TestSource.probe[ExpiringLocation]
         .via(RelayFlows.dispatchFlow)
-        .toMat(TestSink.probe[Location])(Keep.both)
+        .toMat(TestSink.probe[ExpiringLocation])(Keep.both)
         .run()
 
       sub.request(1)
@@ -193,16 +193,16 @@ class RelayFlowsSpec extends WordSpec with JsonProtocols with ShouldMatchers wit
 
       val dispatchActor: TestProbe = TestProbe()
 
-      val (pub: Probe[Location], _) = TestSource.probe[Location]
+      val (pub: Probe[ExpiringLocation], _) = TestSource.probe[ExpiringLocation]
         .via(RelayFlows.dispatchFlow(dispatchActor.ref))
-        .toMat(TestSink.probe[Location])(Keep.both)
+        .toMat(TestSink.probe[ExpiringLocation])(Keep.both)
         .run()
 
       dispatchActor.receiveN(1)
 
-      val (pub2: Probe[Location], sub2: TestSubscriber.Probe[Location]) = TestSource.probe[Location]
+      val (pub2: Probe[ExpiringLocation], sub2: TestSubscriber.Probe[ExpiringLocation]) = TestSource.probe[ExpiringLocation]
         .via(RelayFlows.dispatchFlow(dispatchActor.ref))
-        .toMat(TestSink.probe[Location])(Keep.both)
+        .toMat(TestSink.probe[ExpiringLocation])(Keep.both)
         .run()
 
       val subscribeMessages: Seq[Subscribe] = dispatchActor.receiveN(1).map(_.asInstanceOf[Subscribe])

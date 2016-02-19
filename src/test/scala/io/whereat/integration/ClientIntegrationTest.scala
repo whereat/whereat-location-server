@@ -19,7 +19,7 @@ import java.net.URI
 
 import io.whereat.integration.support.{TestConfig, TestWebClient}
 import io.whereat.MainTrait
-import io.whereat.model.{LocationJsonProtocol, Location}
+import io.whereat.model.{ExpiringLocationJsonProtocol, ExpiringLocation, LocationJsonProtocol, Location}
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.concurrent.ScalaFutures._
@@ -33,7 +33,7 @@ class ClientIntegrationTest
   extends WordSpec
     with Matchers
     with ShouldMatchers
-    with LocationJsonProtocol {
+    with ExpiringLocationJsonProtocol {
 
   object TestMain extends MainTrait with TestConfig
 
@@ -48,16 +48,15 @@ class ClientIntegrationTest
       clientA.connect()
       clientB.connect()
 
-      val sentLocation: Location = Location(
-        id = "75782cd4-1a42-4af1-9130-05c63b2aa9ff",
+      val sentLocation: ExpiringLocation = ExpiringLocation(
         lat = 40.7092529,
         lon = 40.7092529,
-        time = 1505606400000L
+        ttl = 5000
       )
       clientA.sendMessage(sentLocation.toJson.toString)
       clientA.disconnect()
 
-      eventually(clientB.messages.map(_.parseJson.convertTo[Location])
+      eventually(clientB.messages.map(_.parseJson.convertTo[ExpiringLocation])
         should contain(sentLocation))
 
       clientB.disconnect()

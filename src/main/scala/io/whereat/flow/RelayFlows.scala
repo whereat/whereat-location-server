@@ -24,7 +24,7 @@ import akka.http.scaladsl.model.ws.TextMessage.Strict
 import akka.stream.scaladsl._
 import akka.stream.{BidiShape, OverflowStrategy}
 import io.whereat.actor.{Unsubscribe, DispatchActor, Subscribe}
-import io.whereat.model.{Error, JsonProtocols, Location}
+import io.whereat.model._
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
@@ -33,19 +33,19 @@ object RelayFlows extends JsonProtocols {
 
   private implicit val system : ActorSystem = ActorSystem()
 
-  val errorHandlingFlow: BidiFlow[Try[Location], Location, Location, Either[Error, Location], Unit] =
+  val errorHandlingFlow: BidiFlow[Try[ExpiringLocation], ExpiringLocation, ExpiringLocation, Either[Error, ExpiringLocation], Unit] =
     BidiFlow.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
-      val in1 = b.add(Broadcast[Try[Location]](2))
-      val successFlow = b.add(Flow[Try[Location]].collect {
+      val in1 = b.add(Broadcast[Try[ExpiringLocation]](2))
+      val successFlow = b.add(Flow[Try[ExpiringLocation]].collect {
         case Success(location) => location
       })
-      val failureFlow = b.add(Flow[Try[Location]].collect {
+      val failureFlow = b.add(Flow[Try[ExpiringLocation]].collect {
         case Failure(_) => Left(Error("Invalid location"))
       })
-      val in2 = b.add(Flow[Location].map(location => Right(location)))
-      val out2 = b.add(Merge[Either[Error, Location]](2))
-      val out1 = b.add(Flow[Location])
+      val in2 = b.add(Flow[ExpiringLocation].map(location => Right(location)))
+      val out2 = b.add(Merge[Either[Error, ExpiringLocation]](2))
+      val out1 = b.add(Flow[ExpiringLocation])
 
       in1 ~> successFlow ~> out1
       in1 ~> failureFlow
@@ -57,17 +57,17 @@ object RelayFlows extends JsonProtocols {
 
   val deserializationFlow = Flow[ws.Message].map(
     incomingMessage =>
-      Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[Location])
+      Try(incomingMessage.asInstanceOf[Strict].text.parseJson.convertTo[ExpiringLocation])
   )
 
-  val serializationFlow = Flow[Either[Error, Location]].map {
+  val serializationFlow = Flow[Either[Error, ExpiringLocation]].map {
     case Left(error) => TextMessage.Strict(error.toJson.toString)
     case Right(location) => TextMessage.Strict(location.toJson.toString)
   }
 
-  def dispatchFlow(implicit dispatchActor: ActorRef): Flow[Location, Location, Unit] = {
+  def dispatchFlow(implicit dispatchActor: ActorRef): Flow[ExpiringLocation, ExpiringLocation, Unit] = {
     val id: String = UUID.randomUUID().toString
-    val source: Source[Location, Unit] = Source.actorRef[Location](1, OverflowStrategy.fail).mapMaterializedValue(
+    val source: Source[ExpiringLocation, Unit] = Source.actorRef[ExpiringLocation](1, OverflowStrategy.fail).mapMaterializedValue(
       subscriber =>
         dispatchActor ! Subscribe(id, subscriber)
     )

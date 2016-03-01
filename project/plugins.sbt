@@ -8,3 +8,4 @@ resolvers += Classpaths.sbtPluginReleases
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.3")
 addSbtPlugin("com.heroku" % "sbt-heroku" % "0.3.0")
 addSbtPlugin("au.com.onegeek" %% "sbt-dotenv" % "1.1.33")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.2")

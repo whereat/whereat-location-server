@@ -12,7 +12,6 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 scalacOptions ++= Seq("-Xmax-classfile-name", "128")
 
-/*
 assemblyMergeStrategy in assembly := {
   // In the case of HikariCP, a java-6 version is loaded onto the classpath first (why?)
   // We want to use the current version, which is loaded last.
@@ -22,7 +21,6 @@ assemblyMergeStrategy in assembly := {
     val old = (assemblyMergeStrategy in assembly).value
     old(x)
 }
-*/
 
 libraryDependencies ++= {
   val akkaStreamVersion = "2.0.3"

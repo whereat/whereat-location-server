@@ -12,6 +12,8 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 scalacOptions ++= Seq("-Xmax-classfile-name", "128")
 
+assemblyJarName in assembly := "whereat-server-assembly.jar"
+
 assemblyMergeStrategy in assembly := {
   // In the case of HikariCP, a java-6 version is loaded onto the classpath first (why?)
   // We want to use the current version, which is loaded last.

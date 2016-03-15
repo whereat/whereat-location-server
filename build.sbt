@@ -2,7 +2,7 @@ import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 
 enablePlugins(JavaAppPackaging)
 
-name := "whereat-server"
+name := "whereat-location-server"
 
 version := "1.0"
 

@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/whereat-server
+web: target/universal/stage/bin/whereat-location-server

@@ -2,7 +2,7 @@ import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 
 enablePlugins(JavaAppPackaging)
 
-name := "whereat-server"
+name := "whereat-location-server"
 
 version := "1.0"
 
@@ -23,6 +23,8 @@ assemblyMergeStrategy in assembly := {
     val old = (assemblyMergeStrategy in assembly).value
     old(x)
 }
+
+herokuAppName in Compile := "whereat-location-server"
 
 libraryDependencies ++= {
   val akkaStreamVersion = "2.0.3"

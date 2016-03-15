@@ -1,6 +1,5 @@
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
-import sun.security.tools.PathList
-
+11
 enablePlugins(JavaAppPackaging)
 
 name := "whereat-server"

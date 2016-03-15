@@ -1,5 +1,5 @@
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
-11
+
 enablePlugins(JavaAppPackaging)
 
 name := "whereat-server"

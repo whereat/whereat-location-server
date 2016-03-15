@@ -1,4 +1,5 @@
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
+import sun.security.tools.PathList
 
 enablePlugins(JavaAppPackaging)
 

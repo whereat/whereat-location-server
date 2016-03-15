@@ -22,7 +22,6 @@ import org.scalatest.time.{Seconds, Span, Millis}
 import org.scalatest.{Matchers, WordSpecLike}
 import slick.jdbc.meta.MTable
 
-
 class EnvironmentSpec extends WordSpecLike
 with Matchers
 with ScalaFutures {
@@ -47,30 +46,6 @@ with ScalaFutures {
 
     "recognize NullEnv environment" in {
       Environment.of { "FOOBAR" } shouldEqual NullEnv
-    }
-  }
-
-  "`#dbFor`" should {
-
-    "initialize a remote production database" in {
-      val db = Environment.dbFor(Prod)
-      db.run(MTable.getTables).futureValue should not be empty
-
-      db.shutdown.futureValue
-    }
-
-    "initialize a remote development database" in {
-      val db = Environment.dbFor(Dev)
-      db.run(MTable.getTables).futureValue should not be empty
-
-      db.shutdown.futureValue
-    }
-
-    "initialize a remote test database" in {
-      val db = Environment.dbFor(Test)
-      db.run(MTable.getTables).futureValue should not be empty
-
-      db.shutdown.futureValue
     }
   }
 }

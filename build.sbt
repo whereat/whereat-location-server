@@ -24,6 +24,8 @@ assemblyMergeStrategy in assembly := {
     old(x)
 }
 
+herokuAppName in Compile := "whereat-location-server"
+
 libraryDependencies ++= {
   val akkaStreamVersion = "2.0.3"
   val akkaVersion = "2.3.14"

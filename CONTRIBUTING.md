@@ -37,3 +37,7 @@ To run the generated image:
 ```
 docker run -it whereat/whereat-location-server bash
 ```
+
+# Deploying
+
+run `sbt stage deployHeroku` from the root of this project 

@@ -22,7 +22,6 @@ import slick.driver.H2Driver.api._
 import slick.jdbc.meta.MTable
 import scala.concurrent.Future
 
-
 trait LocationDao extends LocationQueries {
 
   val db: Database

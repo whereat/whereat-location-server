@@ -19,8 +19,7 @@ package io.whereat.db
 
 import io.whereat.model.Location
 import slick.lifted.TableQuery
-import slick.driver.PostgresDriver.api._
-
+import slick.driver.H2Driver.api._
 
 trait LocationQueries {
 

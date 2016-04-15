@@ -12,7 +12,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 scalacOptions ++= Seq("-Xmax-classfile-name", "128")
 
-assemblyJarName in assembly := "whereat-server-assembly.jar"
+assemblyJarName in assembly := "whereat-location-server-assembly.jar"
 
 assemblyMergeStrategy in assembly := {
   // In the case of HikariCP, a java-6 version is loaded onto the classpath first (why?)
@@ -25,6 +25,8 @@ assemblyMergeStrategy in assembly := {
 }
 
 herokuAppName in Compile := "whereat-location-server"
+
+coverageEnabled := true
 
 libraryDependencies ++= {
   val akkaStreamVersion = "2.0.3"

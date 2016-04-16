@@ -26,7 +26,12 @@ assemblyMergeStrategy in assembly := {
 
 herokuAppName in Compile := "whereat-location-server"
 
-coverageEnabled := true
+// test and test coverage report settings
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/test-reports")
+
+coverageMinimum := 80
+
+coverageFailOnMinimum := true
 
 libraryDependencies ++= {
   val akkaStreamVersion = "2.0.3"

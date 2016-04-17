@@ -1,5 +1,4 @@
 FROM ubuntu
-
 MAINTAINER whereat.admin@riseup.net
 
 # expose port 5000 to host
@@ -14,9 +13,6 @@ RUN apt-get -y update
 # install packages
 RUN apt-get -y install default-jdk
 RUN apt-get -y install sbt
-
-# add go user
-RUN yes | adduser go
 
 # set working directory
 RUN mkdir whereat-location-server

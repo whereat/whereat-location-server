@@ -6,11 +6,15 @@ name := "whereat-location-server"
 
 version := "1.0"
 
+// scala
+
 scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 scalacOptions ++= Seq("-Xmax-classfile-name", "128")
+
+// packaging
 
 assemblyJarName in assembly := "whereat-location-server-assembly.jar"
 
@@ -24,14 +28,21 @@ assemblyMergeStrategy in assembly := {
     old(x)
 }
 
+test in assembly := {}
+
+// deploy
+
 herokuAppName in Compile := "whereat-location-server"
 
-// test and test coverage report settings
+// test reporting
+
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports", "-o")
 
 coverageMinimum := 80
 
 coverageFailOnMinimum := true
+
+// dependencies
 
 libraryDependencies ++= {
   val akkaStreamVersion = "2.0.3"

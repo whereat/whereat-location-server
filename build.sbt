@@ -27,7 +27,7 @@ assemblyMergeStrategy in assembly := {
 herokuAppName in Compile := "whereat-location-server"
 
 // test and test coverage report settings
-testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports", "-o")
 
 coverageMinimum := 80
 
